@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
 import RecoverPassword from './pages/RecoverPassword';
 import ForcePasswordChange from './pages/ForcePasswordChange';
+import MainLayout from './layouts/MainLayout';
 
 // Route Guard: Protected paths requiring authentication
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -71,6 +72,27 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
 };
 
 const App: React.FC = () => {
+  React.useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    let activeTheme: 'light' | 'dark' = 'dark';
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      activeTheme = savedTheme;
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      activeTheme = 'dark';
+    } else {
+      activeTheme = 'light';
+    }
+
+    const root = window.document.documentElement;
+    if (activeTheme === 'dark') {
+      root.classList.add('dark');
+      root.style.colorScheme = 'dark';
+    } else {
+      root.classList.remove('dark');
+      root.style.colorScheme = 'light';
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <BrowserRouter>
@@ -100,13 +122,14 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <MainLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route path="/dashboard" element={<Dashboard />} />
+          </Route>
           <Route
             path="/force-password-change"
             element={

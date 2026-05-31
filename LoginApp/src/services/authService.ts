@@ -49,6 +49,40 @@ export const authService = {
   },
 
   /**
+   * Fetches the full profile details of a user by their email
+   */
+  async getUserByEmail(email: string): Promise<any> {
+    const response = await apiClient.get<Array<any>>('/users');
+    const users = response.data;
+    const matched = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (!matched) throw new Error('Usuario no encontrado en el sistema.');
+    return matched;
+  },
+
+  /**
+   * Updates a user profile in the backend
+   */
+  async updateUser(
+    id: string,
+    name: string,
+    lastName: string,
+    dateOfBirth?: string,
+    phoneNumber?: string,
+    photoUrl?: string,
+    address?: string
+  ): Promise<any> {
+    const response = await apiClient.put(`/auth/users/${id}`, {
+      name,
+      lastName,
+      dateOfBirth,
+      phoneNumber,
+      photoUrl,
+      address,
+    });
+    return response.data;
+  },
+
+  /**
    * Dispatches silent refresh request using body payloads and saves rotated tokens
    */
   async refreshToken(): Promise<RefreshResponse> {

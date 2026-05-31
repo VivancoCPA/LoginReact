@@ -98,7 +98,7 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row bg-brand-dark overflow-hidden">
+    <div className="min-h-screen w-full flex flex-col md:flex-row bg-slate-50 dark:bg-brand-dark transition-colors duration-300 overflow-hidden">
       
       {/* LEFT SIDE: Brand & Corporate Branding (Desktop only, responsive collapse) */}
       <div className="hidden md:flex md:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-indigo-950 via-slate-900 to-brand-dark border-r border-slate-800/60 relative">
@@ -142,7 +142,7 @@ export const Login: React.FC = () => {
       </div>
 
       {/* RIGHT SIDE: Authentication Form Card */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative bg-slate-50 dark:bg-brand-dark transition-colors duration-300">
         <div className="absolute inset-0 bg-radial-gradient from-indigo-950/20 via-transparent to-transparent pointer-events-none"></div>
 
         <div className="w-full max-w-md glass-panel p-8 sm:p-10 rounded-2xl shadow-2xl relative z-10 animate-fadeIn duration-500">
@@ -152,12 +152,12 @@ export const Login: React.FC = () => {
             <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center">
               <span className="font-extrabold text-white text-md">E</span>
             </div>
-            <span className="font-bold text-md text-slate-100 tracking-wider">ENTERPRISE</span>
+            <span className="font-bold text-md text-slate-800 dark:text-slate-100 tracking-wider">ENTERPRISE</span>
           </div>
 
           <div className="text-center md:text-left mb-8">
-            <h2 className="text-2xl font-bold text-white mb-2">Iniciar Sesión</h2>
-            <p className="text-sm text-slate-400">Ingrese sus credenciales corporativas para continuar</p>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Iniciar Sesión</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Ingrese sus credenciales corporativas para continuar</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -188,27 +188,27 @@ export const Login: React.FC = () => {
             />
 
             {/* Password guidelines info box */}
-            <div className="p-3 bg-slate-900/40 rounded-lg border border-slate-800/50 text-[10px] text-slate-400 space-y-1.5 select-none text-left">
-              <span className="font-semibold text-slate-300 block mb-0.5">Requisitos del Password:</span>
+            <div className="p-3 bg-slate-100/80 dark:bg-slate-900/40 rounded-lg border border-slate-200 dark:border-slate-800/50 text-[10px] text-slate-500 dark:text-slate-400 space-y-1.5 select-none text-left">
+              <span className="font-semibold text-slate-700 dark:text-slate-300 block mb-0.5">Requisitos del Password:</span>
               <div className="grid grid-cols-2 gap-x-2 gap-y-1">
                 <div className="flex items-center gap-1.5">
-                  <span className={`h-1.5 w-1.5 rounded-full ${password.length >= 8 ? 'bg-green-500' : 'bg-slate-600'}`}></span>
+                  <span className={`h-1.5 w-1.5 rounded-full ${password.length >= 8 ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}></span>
                   <span>Mínimo 8 caracteres</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className={`h-1.5 w-1.5 rounded-full ${/[A-Z]/.test(password) ? 'bg-green-500' : 'bg-slate-600'}`}></span>
+                  <span className={`h-1.5 w-1.5 rounded-full ${/[A-Z]/.test(password) ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}></span>
                   <span>1 Mayúscula</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className={`h-1.5 w-1.5 rounded-full ${/[a-z]/.test(password) ? 'bg-green-500' : 'bg-slate-600'}`}></span>
+                  <span className={`h-1.5 w-1.5 rounded-full ${/[a-z]/.test(password) ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}></span>
                   <span>1 Minúscula</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className={`h-1.5 w-1.5 rounded-full ${/\d/.test(password) ? 'bg-green-500' : 'bg-slate-600'}`}></span>
+                  <span className={`h-1.5 w-1.5 rounded-full ${/\d/.test(password) ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}></span>
                   <span>1 Número</span>
                 </div>
                 <div className="flex items-center gap-1.5 col-span-2">
-                  <span className={`h-1.5 w-1.5 rounded-full ${/[@$!%*?&#.\-_+=[\]{}()|:;'"<>,?~`/\\]/.test(password) ? 'bg-green-500' : 'bg-slate-600'}`}></span>
+                  <span className={`h-1.5 w-1.5 rounded-full ${/[@$!%*?&#.\-_+=[\]{}()|:;'"<>,?~`/\\]/.test(password) ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}></span>
                   <span>1 Carácter Especial (@, $, !, %, *, etc.)</span>
                 </div>
               </div>
@@ -218,7 +218,7 @@ export const Login: React.FC = () => {
               <Link
                 to="/forgot-password"
                 state={{ email }}
-                className="text-slate-400 hover:text-indigo-400 hover:underline transition-colors duration-200"
+                className="text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:underline transition-colors duration-200"
               >
                 ¿Olvidó su contraseña?
               </Link>
@@ -244,11 +244,11 @@ export const Login: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-8 text-center text-xs text-slate-400 select-none">
+          <div className="mt-8 text-center text-xs text-slate-500 dark:text-slate-400 select-none">
             ¿No tiene una cuenta?{' '}
             <Link
               to="/register"
-              className="font-semibold text-indigo-400 hover:text-indigo-300 hover:underline transition-colors duration-200"
+              className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline transition-colors duration-200"
             >
               Registrar nuevo usuario
             </Link>

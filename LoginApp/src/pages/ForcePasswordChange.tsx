@@ -103,7 +103,7 @@ export const ForcePasswordChange: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row bg-brand-dark overflow-hidden select-none">
+    <div className="min-h-screen w-full flex flex-col md:flex-row bg-slate-50 dark:bg-brand-dark transition-colors duration-300 overflow-hidden select-none">
       
       {/* LEFT SIDE: Corporate Branding */}
       <div className="hidden md:flex md:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-indigo-950 via-slate-900 to-brand-dark border-r border-slate-800/60 relative">
@@ -131,25 +131,25 @@ export const ForcePasswordChange: React.FC = () => {
       </div>
 
       {/* RIGHT SIDE: Password Form Card */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative text-left">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative text-left bg-slate-50 dark:bg-brand-dark transition-colors duration-300">
         <div className="absolute inset-0 bg-radial-gradient from-indigo-950/20 via-transparent to-transparent pointer-events-none"></div>
 
         <div className="w-full max-w-md glass-panel p-8 sm:p-10 rounded-2xl shadow-2xl relative z-10 animate-fadeIn duration-500">
           
           <div className="text-center md:text-left mb-8">
-            <h2 className="text-2xl font-bold text-white mb-2">Nueva Contraseña</h2>
-            <p className="text-sm text-slate-400">Complete los campos para asegurar su cuenta</p>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Nueva Contraseña</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Complete los campos para asegurar su cuenta</p>
           </div>
 
           {/* User detail fields (Read-Only) */}
-          <div className="p-4 bg-slate-900/40 rounded-lg border border-slate-800/40 mb-6 space-y-2 text-xs">
+          <div className="p-4 bg-slate-100/80 dark:bg-slate-900/40 rounded-lg border border-slate-200 dark:border-slate-800/40 mb-6 space-y-2 text-xs">
             <div className="flex justify-between">
-              <span className="text-slate-400">Usuario:</span>
-              <span className="font-semibold text-slate-200">{user?.name}</span>
+              <span className="text-slate-500 dark:text-slate-400">Usuario:</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">{user?.name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Correo Electrónico:</span>
-              <span className="font-semibold text-indigo-400">{user?.email}</span>
+              <span className="text-slate-500 dark:text-slate-400">Correo Electrónico:</span>
+              <span className="font-semibold text-indigo-600 dark:text-indigo-400">{user?.email}</span>
             </div>
           </div>
 
@@ -157,7 +157,7 @@ export const ForcePasswordChange: React.FC = () => {
             
             {/* Field 1: New Password */}
             <div className="w-full flex flex-col gap-1.5 mb-4 relative">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Nueva Contraseña
               </label>
               <div className="relative rounded-lg overflow-hidden group">
@@ -167,9 +167,9 @@ export const ForcePasswordChange: React.FC = () => {
                   value={password}
                   onChange={handlePasswordChange}
                   disabled={isSubmitting}
-                  className={`w-full px-4 py-3 pr-10 bg-slate-900/60 border border-slate-700/50 rounded-lg text-sm text-slate-100 placeholder-slate-500
+                  className={`w-full px-4 py-3 pr-10 bg-white dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700/50 rounded-lg text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500
                     focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/50 
-                    transition-all duration-300 ease-out group-hover:border-slate-600/70
+                    transition-all duration-300 ease-out group-hover:border-slate-400 dark:group-hover:border-slate-600/70
                     ${passwordError ? 'border-red-500/70 focus:border-red-500 focus:ring-red-500/30' : ''}`}
                   required
                 />
@@ -190,7 +190,7 @@ export const ForcePasswordChange: React.FC = () => {
 
             {/* Field 2: Confirm Password */}
             <div className="w-full flex flex-col gap-1.5 mb-4 relative">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Confirmar Contraseña
               </label>
               <div className="relative rounded-lg overflow-hidden group">
@@ -200,9 +200,9 @@ export const ForcePasswordChange: React.FC = () => {
                   value={confirmPassword}
                   onChange={handleConfirmChange}
                   disabled={isSubmitting}
-                  className={`w-full px-4 py-3 pr-10 bg-slate-900/60 border border-slate-700/50 rounded-lg text-sm text-slate-100 placeholder-slate-500
+                  className={`w-full px-4 py-3 pr-10 bg-white dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700/50 rounded-lg text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500
                     focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/50 
-                    transition-all duration-300 ease-out group-hover:border-slate-600/70
+                    transition-all duration-300 ease-out group-hover:border-slate-400 dark:group-hover:border-slate-600/70
                     ${confirmError ? 'border-red-500/70 focus:border-red-500 focus:ring-red-500/30' : ''}`}
                   required
                 />
@@ -222,27 +222,27 @@ export const ForcePasswordChange: React.FC = () => {
             </div>
 
             {/* Complexity Indicator Panel */}
-            <div className="p-3 bg-slate-900/40 rounded-lg border border-slate-800/50 text-[10px] text-slate-400 space-y-1.5 select-none">
-              <span className="font-semibold text-slate-300 block mb-0.5">Políticas de Creación de Password:</span>
+            <div className="p-3 bg-slate-100/80 dark:bg-slate-900/40 rounded-lg border border-slate-200 dark:border-slate-800/50 text-[10px] text-slate-500 dark:text-slate-400 space-y-1.5 select-none">
+              <span className="font-semibold text-slate-700 dark:text-slate-300 block mb-0.5">Políticas de Creación de Password:</span>
               <div className="grid grid-cols-2 gap-x-2 gap-y-1">
                 <div className="flex items-center gap-1.5">
-                  <span className={`h-1.5 w-1.5 rounded-full ${password.length >= 8 ? 'bg-green-500' : 'bg-slate-600'}`}></span>
+                  <span className={`h-1.5 w-1.5 rounded-full ${password.length >= 8 ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}></span>
                   <span>Mínimo 8 caracteres</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className={`h-1.5 w-1.5 rounded-full ${/[A-Z]/.test(password) ? 'bg-green-500' : 'bg-slate-600'}`}></span>
+                  <span className={`h-1.5 w-1.5 rounded-full ${/[A-Z]/.test(password) ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}></span>
                   <span>1 Mayúscula</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className={`h-1.5 w-1.5 rounded-full ${/[a-z]/.test(password) ? 'bg-green-500' : 'bg-slate-600'}`}></span>
+                  <span className={`h-1.5 w-1.5 rounded-full ${/[a-z]/.test(password) ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}></span>
                   <span>1 Minúscula</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className={`h-1.5 w-1.5 rounded-full ${/\d/.test(password) ? 'bg-green-500' : 'bg-slate-600'}`}></span>
+                  <span className={`h-1.5 w-1.5 rounded-full ${/\d/.test(password) ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}></span>
                   <span>1 Número</span>
                 </div>
                 <div className="flex items-center gap-1.5 col-span-2">
-                  <span className={`h-1.5 w-1.5 rounded-full ${/[@$!%*?&#.\-_+=[\]{}()|:;'"<>,?~`/\\]/.test(password) ? 'bg-green-500' : 'bg-slate-600'}`}></span>
+                  <span className={`h-1.5 w-1.5 rounded-full ${/[@$!%*?&#.\-_+=[\]{}()|:;'"<>,?~`/\\]/.test(password) ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}></span>
                   <span>1 Carácter Especial (@, $, !, %, *, etc.)</span>
                 </div>
               </div>
@@ -254,7 +254,7 @@ export const ForcePasswordChange: React.FC = () => {
                 type="button"
                 onClick={handleCancel}
                 disabled={isSubmitting}
-                className="flex-1 py-3 px-4 bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold rounded-lg text-sm border border-slate-700/50 flex items-center justify-center transition-all duration-200 cursor-pointer disabled:opacity-50"
+                className="flex-1 py-3 px-4 bg-white hover:bg-slate-50 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:text-slate-300 font-semibold rounded-lg text-sm border border-slate-200 dark:border-slate-700/50 flex items-center justify-center transition-all duration-200 cursor-pointer disabled:opacity-50"
               >
                 Cancelar
               </button>

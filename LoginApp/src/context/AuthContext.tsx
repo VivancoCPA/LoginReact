@@ -9,6 +9,7 @@ interface AuthContextType extends AuthState {
   checkTokenExpiry: () => boolean;
   tempPassword: string | null;
   changeTempPassword: (newPassword: string) => Promise<void>;
+  updateUserSession: (updatedUser: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -214,8 +215,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateUserSession = (updatedUser: Partial<User>) => {
+    setState((prev) => {
+      if (!prev.user) return prev;
+      const newUser = { ...prev.user, ...updatedUser };
+      localStorage.setItem('auth_user', JSON.stringify(newUser));
+      return { ...prev, user: newUser };
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, checkTokenExpiry, tempPassword, changeTempPassword }}>
+    <AuthContext.Provider value={{ ...state, login, logout, checkTokenExpiry, tempPassword, changeTempPassword, updateUserSession }}>
       {children}
     </AuthContext.Provider>
   );

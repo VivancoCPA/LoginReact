@@ -75,7 +75,7 @@ export const RecoverPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row bg-brand-dark overflow-hidden select-none text-left">
+    <div className="min-h-screen w-full flex flex-col md:flex-row bg-slate-50 dark:bg-brand-dark transition-colors duration-300 overflow-hidden select-none text-left">
       
       {/* LEFT SIDE: Corporate Branding (Consistent with Login and ForcePasswordChange) */}
       <div className="hidden md:flex md:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-indigo-950 via-slate-900 to-brand-dark border-r border-slate-800/60 relative">
@@ -104,7 +104,7 @@ export const RecoverPassword: React.FC = () => {
       </div>
 
       {/* RIGHT SIDE: Password Recovery Form Card */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative bg-slate-50 dark:bg-brand-dark transition-colors duration-300">
         <div className="absolute inset-0 bg-radial-gradient from-indigo-950/20 via-transparent to-transparent pointer-events-none"></div>
 
         <div className="w-full max-w-md glass-panel p-8 sm:p-10 rounded-2xl shadow-2xl relative z-10 animate-fadeIn duration-500">
@@ -114,12 +114,12 @@ export const RecoverPassword: React.FC = () => {
             <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center">
               <span className="font-extrabold text-white text-md">E</span>
             </div>
-            <span className="font-bold text-md text-slate-100 tracking-wider">ENTERPRISE</span>
+            <span className="font-bold text-md text-slate-800 dark:text-slate-100 tracking-wider">ENTERPRISE</span>
           </div>
 
           <div className="mb-8 text-center md:text-left">
-            <h2 className="text-2xl font-bold text-white mb-2">Recuperar Contraseña</h2>
-            <p className="text-sm text-slate-400">Confirme su correo electrónico registrado para solicitar un nuevo password temporal.</p>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Recuperar Contraseña</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Confirme su correo electrónico registrado para solicitar un nuevo password temporal.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -133,14 +133,14 @@ export const RecoverPassword: React.FC = () => {
                     type="email"
                     value={email}
                     disabled={true}
-                    className="cursor-not-allowed opacity-80 bg-slate-950/50 border-slate-800"
+                    className="cursor-not-allowed opacity-80 bg-slate-100/80 border-slate-200 dark:bg-slate-950/50 dark:border-slate-800"
                     readOnly
                   />
                   <div className="flex justify-end text-xs">
                     <button
                       type="button"
                       onClick={handleClearReadOnly}
-                      className="text-indigo-400 hover:text-indigo-300 hover:underline transition-colors duration-200 cursor-pointer font-medium"
+                      className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline transition-colors duration-200 cursor-pointer font-medium"
                     >
                       Ingresar otro correo
                     </button>
@@ -162,7 +162,7 @@ export const RecoverPassword: React.FC = () => {
               )}
             </div>
 
-            <div className="p-4 bg-indigo-950/25 border border-indigo-500/15 rounded-xl text-xs leading-relaxed text-indigo-300">
+            <div className="p-4 bg-indigo-50 dark:bg-indigo-950/25 border border-indigo-100 dark:border-indigo-500/15 rounded-xl text-xs leading-relaxed text-indigo-800 dark:text-indigo-300">
               <span className="font-semibold block mb-1">Nota de Seguridad:</span>
               El sistema enviará una contraseña temporal de un solo uso a la dirección confirmada. Se deshabilitará su contraseña anterior y se forzará un cambio de credenciales en su primer inicio de sesión.
             </div>
@@ -170,7 +170,7 @@ export const RecoverPassword: React.FC = () => {
             <div className="flex gap-4 pt-2">
               <Link
                 to="/login"
-                className="flex-1 py-3 px-4 bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold rounded-lg text-sm border border-slate-700/50 flex items-center justify-center transition-all duration-200 cursor-pointer text-center"
+                className="flex-1 py-3 px-4 bg-white hover:bg-slate-50 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:text-slate-300 font-semibold rounded-lg text-sm border border-slate-200 dark:border-slate-700/50 flex items-center justify-center transition-all duration-200 cursor-pointer text-center"
               >
                 Cancelar
               </Link>
