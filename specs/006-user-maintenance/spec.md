@@ -10,6 +10,16 @@
 
 ---
 
+## Clarifications
+
+### Session 2026-05-31
+
+- Q: Should the User Maintenance drawer include options to assign or remove Roles and Claims for the user, or is that out of scope for this CRUD spec? → A: Display active roles and claims as read-only badges in the "Ver Usuario" panel, but do not allow modifications.
+- Q: How should the Family Group multi-select filter list be populated? → A: Dynamically populate the filter by calling GET /api/users on initialization and extracting all unique familyGroupName entries.
+- Q: How should search be performed (client-side on visible rows or server-side on the entire database)? → A: Server-side search: debounced input query passed to the `search` query parameter in the backend `/auth/users/paged` endpoint, filtering the entire database before paginating.
+
+---
+
 ## User Scenarios & Testing
 
 ### User Story 1 - Dual View User Listing (Priority: P1) 🎯 MVP
@@ -58,11 +68,11 @@ As an administrator, I want to create new users, inspect read-only details of ex
 *   **FR-001**: The system MUST fetch paged and filtered users from the backend using the `GET /api/auth/users/paged` endpoint, mapping sorting (`sortBy`, `sortDesc`) and search parameters correctly.
 *   **FR-002**: The layout MUST support both Table and Cards visual modes, saving the chosen layout mode in `sessionStorage` or local memory to persist it across reloads.
 *   **FR-003**: The table columns MUST include: Avatar (initials fallback), Name (sortable), Surname (sortable), Email, Phone, Family Group (as a badge), Status (green badge for Active, grey for Inactivo), and inline action buttons (View, Edit, Toggle Status).
-*   **FR-004**: The free-text search bar MUST filter results in real-time, matching name, lastName, or email.
-*   **FR-005**: The filters MUST support cumulative multi-select filtering by Family Group and toggle filtering by status (Active / Inactive).
+*   **FR-004**: The free-text search bar MUST filter results in real-time, matching name, lastName, or email. The search MUST operate server-side, debouncing inputs and passing them to the `search` query parameter in the backend `/auth/users/paged` endpoint, thereby filtering the entire database.
+*   **FR-005**: The filters MUST support cumulative multi-select filtering by Family Group and toggle filtering by status (Active / Inactive). The unique Family Groups for the multi-select filter MUST be populated dynamically by extracting all unique `familyGroupName` entries retrieved from `GET /api/users` on initialization.
 *   **FR-006**: The "Nuevo usuario" form MUST validate inputs (Email format and unique check, Name and Surname required with $\ge 2$ characters). Family Group field MUST not be administrative editable.
-*   **FR-007**: The "Ver" detail view MUST present full user profile records (including creation dates, last access, address, date of birth) in a clean read-only side drawer or modal.
-*   **FR-008**: The "Editar" form MUST pre-fill all details, locking the Email and Family Group fields from modifications while allowing other fields (Name, LastName, DOB, Phone, Address) to be modified.
+*   **FR-007**: The "Ver" detail view MUST present full user profile records (including creation dates, last access, address, date of birth, and active roles/claims as read-only badges) in a clean read-only side drawer or modal.
+*   **FR-008**: The "Editar" form MUST pre-fill all details, locking the Email, Family Group, roles, and claims from modifications while allowing other fields (Name, LastName, DOB, Phone, Address) to be modified.
 *   **FR-009**: The "Desactivar" action MUST display a confirmation dialog before calling `PATCH /api/users/{userId}/toggle-status` to block the user. For inactive users, a "Reactivar" option MUST be offered.
 
 ---
