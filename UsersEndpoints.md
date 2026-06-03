@@ -17,8 +17,10 @@ Se excluyen explícitamente los endpoints de gestión de roles que no operan sob
   - [Creación Administrativa de Usuario (`POST /api/auth/users`)](#creación-administrativa-de-usuario-post-apiauthusers)
 - [2. Gestión de Roles (Tags: `Users` / `Roles`)](#2-gestión-de-roles-tags-users--roles)
   - [Listar Todos los Roles (`GET /api/roles`)](#listar-todos-los-roles-get-apiroles)
+  - [Crear un Rol (`POST /api/roles`)](#crear-un-rol-post-apiroles)
   - [Actualizar un Rol (`PUT /api/roles/{id}`)](#actualizar-un-rol-put-apirolesid)
   - [Activar o Inactivar un Rol (`PATCH /api/roles/{id}/toggle-status`)](#activar-o-inactivar-un-rol-patch-apirolesidtoggle-status)
+  - [Eliminar un Rol (`DELETE /api/roles/{roleName}`)](#eliminar-un-rol-delete-apirolesrolename)
   - [Obtener Roles de un Usuario (`GET /api/users/{userId}/roles`)](#obtener-roles-de-un-usuario-get-apiusersuseridroles)
   - [Asignar Rol a un Usuario (`POST /api/users/{userId}/roles`)](#asignar-rol-a-un-usuario-post-apiusersuseridroles)
   - [Remover Rol de un Usuario (`DELETE /api/users/{userId}/roles/{roleName}`)] (#remover-rol-de-un-usuario-delete-apiusersuseridrolesrolename)
@@ -324,6 +326,44 @@ Devuelve una lista de todos los roles registrados en el sistema, incluyendo el c
 
 ---
 
+### Crear un Rol (`POST /api/roles`)
+
+*   **Ruta:** `POST /api/roles`
+*   **Nombre de Acción:** `CreateRole`
+*   **Autorización:** Requerido (`.RequireAuthorization()`)
+
+#### Cuerpo de la Solicitud (Request Body - JSON)
+```json
+{
+  "roleName": "Admin",
+  "description": "Administrador del sistema con acceso total",
+  "isActive": true
+}
+```
+*   **Validaciones:**
+    *   `roleName`: Requerido, no vacío, máximo 50 caracteres.
+    *   `description`: Opcional, por defecto cadena vacía.
+    *   `isActive`: Opcional, por defecto `true`.
+
+#### Respuesta Exitosa (`201 Created`)
+Retorna un objeto `CreateRoleResponse` con los detalles del rol creado:
+```json
+{
+  "id": "admin-role-uuid-1111",
+  "name": "Admin",
+  "description": "Administrador del sistema con acceso total",
+  "isActive": true,
+  "createdAt": "2026-06-02T03:28:12Z"
+}
+```
+
+#### Otras Respuestas
+*   **`400 Bad Request`**: Datos de solicitud inválidos.
+*   **`401 Unauthorized`**: El usuario no ha proporcionado credenciales de autenticación válidas.
+*   **`409 Conflict`**: Ya existe un rol con el nombre provisto en `roleName`.
+
+---
+
 ### Actualizar un Rol (`PUT /api/roles/{id}`)
 
 *   **Ruta:** `PUT /api/roles/{id}`
@@ -385,6 +425,30 @@ Devuelve un objeto `ToggleRoleStatusResponse` con el estado actualizado del rol:
 #### Otras Respuestas
 *   **`401 Unauthorized`**: El usuario no ha proporcionado credenciales de autenticación válidas.
 *   **`404 Not Found`**: No se encuentra un rol con el `id` provisto.
+
+---
+
+### Eliminar un Rol (`DELETE /api/roles/{roleName}`)
+
+*   **Ruta:** `DELETE /api/roles/{roleName}`
+*   **Nombre de Acción:** `DeleteRole`
+*   **Autorización:** Requerido (`.RequireAuthorization()`)
+*   **Parámetros de Ruta:**
+    *   `roleName` (string, Requerido): Nombre del rol a eliminar globalmente de la aplicación.
+
+#### Respuesta Exitosa (`200 OK`)
+Retorna un objeto `DeleteRoleResponse` confirmando la eliminación del rol:
+```json
+{
+  "roleName": "Admin",
+  "message": "Rol eliminado correctamente."
+}
+```
+
+#### Otras Respuestas
+*   **`400 Bad Request`**: Error de validación o dependencias en la base de datos (por ejemplo, si el rol tiene usuarios asignados).
+*   **`401 Unauthorized`**: El usuario no ha proporcionado credenciales de autenticación válidas.
+*   **`404 Not Found`**: No se encuentra un rol con el `roleName` provisto.
 
 ---
 

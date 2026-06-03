@@ -20,6 +20,7 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [isActive, setIsActive] = useState(true);
   const [errors, setErrors] = useState<{ name?: string; description?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,9 +30,11 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({
       if (mode === 'edit' && role) {
         setName(role.name || '');
         setDescription(role.description || '');
+        setIsActive(role.isActive !== false);
       } else {
         setName('');
         setDescription('');
+        setIsActive(true);
       }
       setErrors({});
     }
@@ -68,15 +71,17 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({
     try {
       if (mode === 'create') {
         await roleService.createRole({
-          name: name.trim(),
+          roleName: name.trim(),
           description: description.trim(),
+          isActive: true,
         });
         toast.success('Rol creado exitosamente.');
       } else {
         if (!role) return;
         await roleService.updateRole(role.id, {
-          name: name.trim(),
+          roleName: name.trim(),
           description: description.trim(),
+          isActive: isActive,
         });
         toast.success('Información del rol actualizada.');
       }
@@ -97,6 +102,7 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({
   };
 
   const isSystemRole = mode === 'edit' && role?.isSystemRole === true;
+  const isDeactivationBlocked = mode === 'edit' && role && (role.isSystemRole || role.assignedUsersCount > 0);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end overflow-hidden animate-fadeIn">
@@ -194,6 +200,69 @@ export const RoleDrawer: React.FC<RoleDrawerProps> = ({
                 {250 - description.length} caracteres restantes
               </span>
             </div>
+
+            {/* Status (isActive) Input - Only visible/editable in edit mode */}
+            {mode === 'edit' && (
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 select-none">
+                  Estado del Rol
+                </label>
+                
+                {isDeactivationBlocked ? (
+                  // Locked read-only visualization for system roles or roles with assigned users
+                  <div className="flex items-start gap-3.5 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-100/50 dark:bg-slate-900/30 select-none cursor-not-allowed">
+                    <div className="mt-0.5 w-4.5 h-4.5 rounded flex items-center justify-center shrink-0 border border-slate-350 dark:border-slate-700 bg-slate-200 dark:bg-slate-850 text-indigo-500">
+                      {isActive && (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="block text-xs font-bold text-slate-550 dark:text-slate-400">
+                        {isActive ? 'Activo (Bloqueado)' : 'Inactivo (Bloqueado)'}
+                      </span>
+                      <span className="block text-[10px] text-slate-400 dark:text-slate-550 leading-relaxed font-medium">
+                        {role?.isSystemRole 
+                          ? 'No se puede desactivar un rol predeterminado del sistema.' 
+                          : `No se puede desactivar un rol que tiene ${role?.assignedUsersCount} usuario(s) asignado(s).`}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  // Editable toggle status card
+                  <div
+                    onClick={() => !isLoading && setIsActive(!isActive)}
+                    className={`flex items-start gap-3.5 p-3.5 rounded-xl border transition-all duration-200 cursor-pointer select-none
+                      ${isActive 
+                        ? 'bg-indigo-50/50 dark:bg-indigo-600/5 border-indigo-200 dark:border-indigo-600/35 hover:bg-indigo-50/70 dark:hover:bg-indigo-600/10' 
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700/80 hover:bg-slate-50/30 dark:hover:bg-slate-800/10'}`}
+                  >
+                    <div className={`mt-0.5 w-4.5 h-4.5 rounded flex items-center justify-center shrink-0 border transition-all duration-200
+                      ${isActive
+                        ? 'bg-indigo-600 dark:bg-indigo-700 border-indigo-600 dark:border-indigo-750 text-white'
+                        : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}
+                    >
+                      {isActive && (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className={`block text-xs font-bold tracking-wide transition-colors
+                        ${isActive ? 'text-indigo-650 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300'}`}
+                      >
+                        Rol Activo
+                      </span>
+                      <span className="block text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed font-medium">
+                        Marque esta casilla para permitir que el rol sea asignado a usuarios del sistema.
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
         </form>

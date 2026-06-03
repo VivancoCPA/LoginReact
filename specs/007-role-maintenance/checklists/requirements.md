@@ -33,3 +33,4 @@
 
 - Items marked incomplete require spec updates before `/speckit.clarify` or `/speckit.plan`
 - All clarifications resolved in Session 2026-06-02. Ready for implementation planning phase.
+- API endpoints updated in UsersEndpoints.md on 2026-06-03 (Added PUT /api/roles/{id} and PATCH /api/roles/{id}/toggle-status). Spec and checklist reviewed and aligned.

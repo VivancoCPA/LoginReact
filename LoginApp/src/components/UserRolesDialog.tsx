@@ -31,15 +31,7 @@ export const UserRolesDialog: React.FC<UserRolesDialogProps> = ({
         try {
           const [userRolesData, systemRolesData] = await Promise.all([
             userService.getUserRoles(userId),
-            roleService.getRoles().catch((err) => {
-              console.error('Failed to fetch system roles, falling back to defaults', err);
-              return [
-                { id: '1', name: 'Admin', description: 'Acceso total de administración al sistema' },
-                { id: '2', name: 'User', description: 'Acceso estándar para interactuar con la plataforma' },
-                { id: '3', name: 'Auditor', description: 'Lectura y auditoría pasiva de registros e informes' },
-                { id: '4', name: 'Asegurador', description: 'Visualización y gestión de aseguradoras y convenios' },
-              ];
-            })
+            roleService.getRoles()
           ]);
           
           const roles = userRolesData.roles || [];

@@ -104,7 +104,7 @@ Como Administrador del sistema, quiero que cualquier cambio realizado en los rol
     - `id` (Identificador único de rol)
     - `name` (Nombre único, ej. "Auditor")
     - `description` (Descripción descriptiva de sus facultades)
-    - `isAtive` (Bandera booleana que indica si un rol esta Activo/Inactivo)
+    - `isActive` (Bandera booleana que indica si un rol esta Activo/Inactivo)
     - `assignedUsersCount` (Cálculo numérico de usuarios activos asociados a este rol)
     - `isSystemRole` (Bandera booleana para proteger roles core de edición/borrado)
 

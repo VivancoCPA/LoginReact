@@ -89,43 +89,42 @@ LoginApp/src/
 
 ### 1. Types & Services Layer
 
-#### [NEW] [role.ts](file:///c:/Users/ANTONIO/source/repos/agy-sdd/LoginAPi/LoginApp/src/types/role.ts)
-*   Define type interfaces for the Roles schema:
+#### [MODIFY] [role.ts](file:///c:/Users/ANTONIO/source/repos/agy-sdd/LoginAPi/LoginApp/src/types/role.ts)
+*   Define type interfaces for the Roles schema including status and timestamps:
     ```typescript
     export interface RoleItem {
       id: string;
       name: string;
       description?: string;
+      isActive: boolean;
+      createdAt?: string;
       assignedUsersCount: number;
       isSystemRole?: boolean;
     }
-    export interface CreateRolePayload {
-      name: string;
+    export interface UpdateRolePayload {
+      roleName: string;
       description: string;
+      isActive: boolean;
     }
     ```
 
-#### [NEW] [roleService.ts](file:///c:/Users/ANTONIO/source/repos/agy-sdd/LoginAPi/LoginApp/src/services/roleService.ts)
+#### [MODIFY] [roleService.ts](file:///c:/Users/ANTONIO/source/repos/agy-sdd/LoginAPi/LoginApp/src/services/roleService.ts)
 *   Implement Axios bindings hitting `/api/roles` endpoints:
     ```typescript
     import { apiClient } from './apiClient';
-    import type { RoleItem, CreateRolePayload } from '../types/role';
+    import type { RoleItem, UpdateRolePayload } from '../types/role';
 
     export const roleService = {
       async getRoles(): Promise<RoleItem[]> {
         const response = await apiClient.get<RoleItem[]>('/roles');
         return response.data;
       },
-      async createRole(payload: CreateRolePayload): Promise<RoleItem> {
-        const response = await apiClient.post<RoleItem>('/roles', payload);
-        return response.data;
-      },
-      async updateRole(id: string, payload: CreateRolePayload): Promise<RoleItem> {
+      async updateRole(id: string, payload: UpdateRolePayload): Promise<RoleItem> {
         const response = await apiClient.put<RoleItem>(`/roles/${id}`, payload);
         return response.data;
       },
-      async deleteRole(id: string): Promise<any> {
-        const response = await apiClient.delete(`/roles/${id}`);
+      async toggleRoleStatus(id: string): Promise<{ id: string; name: string; isActive: boolean; status: string }> {
+        const response = await apiClient.patch<{ id: string; name: string; isActive: boolean; status: string }>(`/roles/${id}/toggle-status`);
         return response.data;
       }
     };
@@ -152,7 +151,7 @@ LoginApp/src/
 *   **Cards Grid View**:
     *   Flex-grid layout adapting structure responsively (`1` to `3` columns).
     *   Displays Name, User count, and a vertical dots dropdown actions menu (⋮) containing the "Editar" option.
-*   **Delete Guards**: Includes an explicit safety lockout. The delete action is omitted or blocked if a role has active users or is a core protected system role.
+*   **Status Toggle Guards**: Includes an explicit safety lockout. The deactivation action (via toggle) is blocked or restricted if a role has active users or is a core protected system role.
 
 ---
 

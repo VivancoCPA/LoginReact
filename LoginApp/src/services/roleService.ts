@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import type { RoleItem, CreateRolePayload } from '../types/role';
+import type { RoleItem, CreateRolePayload, UpdateRolePayload } from '../types/role';
 
 export const roleService = {
   /**
@@ -21,16 +21,18 @@ export const roleService = {
   /**
    * Updates details of an existing global role
    */
-  async updateRole(id: string, payload: CreateRolePayload): Promise<RoleItem> {
+  async updateRole(id: string, payload: UpdateRolePayload): Promise<RoleItem> {
     const response = await apiClient.put<RoleItem>(`/roles/${id}`, payload);
     return response.data;
   },
 
   /**
-   * Deletes a global system role (blocked if assignedUsersCount > 0 or if protected)
+   * Toggles the active/inactive status of a role
    */
-  async deleteRole(id: string): Promise<any> {
-    const response = await apiClient.delete(`/roles/${id}`);
+  async toggleRoleStatus(id: string): Promise<{ id: string; name: string; isActive: boolean; status: string }> {
+    const response = await apiClient.patch<{ id: string; name: string; isActive: boolean; status: string }>(`/roles/${id}/toggle-status`);
     return response.data;
   }
 };
+
+
