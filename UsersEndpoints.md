@@ -15,10 +15,13 @@ Se excluyen explícitamente los endpoints de gestión de roles que no operan sob
   - [Actualizar Información de Usuario (`PUT /api/auth/users/{id}`)](#actualizar-información-de-usuario-put-apiauthusersid)
   - [Activar o Bloquear Usuario (`PATCH /api/users/{userId}/toggle-status`)](#activar-o-bloquear-usuario-patch-apiusersuseridtoggle-status)
   - [Creación Administrativa de Usuario (`POST /api/auth/users`)](#creación-administrativa-de-usuario-post-apiauthusers)
-- [2. Gestión de Roles del Usuario (Tag: `Users`)](#2-gestión-de-roles-del-usuario-tag-users)
+- [2. Gestión de Roles (Tags: `Users` / `Roles`)](#2-gestión-de-roles-tags-users--roles)
+  - [Listar Todos los Roles (`GET /api/roles`)](#listar-todos-los-roles-get-apiroles)
+  - [Actualizar un Rol (`PUT /api/roles/{id}`)](#actualizar-un-rol-put-apirolesid)
+  - [Activar o Inactivar un Rol (`PATCH /api/roles/{id}/toggle-status`)](#activar-o-inactivar-un-rol-patch-apirolesidtoggle-status)
   - [Obtener Roles de un Usuario (`GET /api/users/{userId}/roles`)](#obtener-roles-de-un-usuario-get-apiusersuseridroles)
   - [Asignar Rol a un Usuario (`POST /api/users/{userId}/roles`)](#asignar-rol-a-un-usuario-post-apiusersuseridroles)
-  - [Remover Rol de un Usuario (`DELETE /api/users/{userId}/roles/{roleName}`)](#remover-rol-de-un-usuario-delete-apiusersuseridrolesrolename)
+  - [Remover Rol de un Usuario (`DELETE /api/users/{userId}/roles/{roleName}`)] (#remover-rol-de-un-usuario-delete-apiusersuseridrolesrolename)
 - [3. Gestión de Claims del Usuario (Tag: `Users`)](#3-gestión-de-claims-del-usuario-tag-users)
   - [Obtener Claims de un Usuario (`GET /api/users/{userId}/claims`)](#obtener-claims-de-un-usuario-get-apiusersuseridclaims)
   - [Asignar Claim a un Usuario (`POST /api/users/{userId}/claims`)](#asignar-claim-a-un-usuario-post-apiusersuseridclaims)
@@ -57,6 +60,7 @@ Devuelve un objeto `GetUserResponse` con la información detallada del perfil:
   "isLockedOut": false,
   "lockoutEnd": null,
   "passwordConfirmed": true,
+  "lastAccess": "2026-06-01T09:46:00Z",
   "roles": ["string"],
   "claims": ["TipoClaim:ValorClaim"]
 }
@@ -90,6 +94,8 @@ Retorna una lista `IEnumerable<ListUsersResponse>` con todos los usuarios regist
     "address": "string",
     "emailConfirmed": true,
     "isLockedOut": false,
+    "lastAccess": "2026-06-01T09:46:00Z",
+    "passwordConfirmed": true,
     "familyGroupId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "familyGroupName": "string",
     "insurances": [
@@ -137,6 +143,8 @@ Retorna un objeto `PaginatedResult<PagedUserItem>` que incluye metadatos de la p
       "emailConfirmed": true,
       "isLockedOut": false,
       "createdAt": "2026-05-22T18:24:27Z",
+      "lastAccess": "2026-06-01T09:46:00Z",
+      "passwordConfirmed": true,
       "familyGroupId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "familyGroupName": "string",
       "insurances": [
@@ -175,7 +183,7 @@ Objeto `UpdateUserCommand` con los campos actualizables:
 {
   "name": "Juan",
   "lastName": "Pérez",
-  "dateOfBirth": "1990-05-15T00:00:00Z",
+  "dateOfBirth": "1990-05-15",
   "phoneNumber": "+1234567890",
   "photoUrl": "https://example.com/avatar.jpg",
   "address": "Calle Falsa 123"
@@ -184,6 +192,7 @@ Objeto `UpdateUserCommand` con los campos actualizables:
 *   **Validaciones:**
     *   `name`: Obligatorio, longitud máxima 100 caracteres.
     *   `lastName`: Obligatorio, longitud máxima 100 caracteres.
+    *   `dateOfBirth`: Opcional, debe tener un formato de fecha válido `yyyy-MM-dd`.
 
 #### Respuesta Exitosa (`200 OK`)
 Retorna `UpdateUserResponse` confirmando los cambios realizados:
@@ -240,47 +249,144 @@ Retorna `ToggleUserStatusResponse` con el estado final:
 *   **Nombre de Acción:** `CreateUser`
 *   **Autorización:** Ninguna (Omitido por desarrollo, se puede proteger con Roles/Admins luego).
 
-#### Cuerpo de la Solicitud (Request Body - JSON)
-Objeto `CreateUserCommand` con la información del usuario a crear:
-```json
-{
-  "email": "nuevo.usuario@example.com",
-  "name": "Juan",
-  "lastName": "Pérez",
-  "phone": "+1234567890",
-  "dateOfBirth": "1995-08-25T00:00:00Z"
-}
-```
-*   **Validaciones:**
-    *   `email`: Obligatorio, formato de dirección de email válido.
-    *   `name`: Obligatorio, longitud máxima 100 caracteres.
-    *   `lastName`: Obligatorio, longitud máxima 100 caracteres.
+#### Cuerpo de la Solicitud (FormData / `multipart/form-data`)
+La petición debe enviarse codificada como formulario (`multipart/form-data`) con los siguientes campos:
+
+*   `email` (string, Requerido): Correo electrónico del usuario. Debe ser único y tener formato de dirección válido.
+*   `name` (string, Requerido): Nombre del usuario. Máx. 100 caracteres.
+*   `lastName` (string, Requerido): Apellido del usuario. Máx. 100 caracteres.
+*   `phone` (string, Opcional): Teléfono del usuario.
+*   `dateOfBirth` (string / DateTime, Opcional): Fecha de nacimiento (ej. `1995-08-25`).
+*   `photo` (file / IFormFile, Opcional): Archivo de imagen de la foto de perfil.
+
+> [!IMPORTANT]
+> **Recomendación para el FrontEnd (React / JS / TS)**:
+> Al invocar este endpoint utilizando un objeto `FormData`, **NO debes definir manualmente la cabecera `'Content-Type': 'multipart/form-data'`** en las cabeceras (`headers`) de tu cliente HTTP (`fetch` o `axios`). 
+> Al pasar el objeto `FormData` como cuerpo de la petición, el navegador asignará y gestionará de manera automática la cabecera `multipart/form-data` e inyectará el parámetro dinámico de separación `boundary`. Si lo declaras a mano, la petición fallará en el servidor por ausencia de delimitadores.
 
 #### Comportamiento
 *   Verifica que el email no esté en uso.
-*   Autogenera una contraseña temporal segura que cumple con las directivas de seguridad.
-*   Registra el usuario con `EmailConfirmed = true` (ya confirmado) y `PasswordConfirmed = false` (indica que debe ser cambiada en el primer ingreso).
-*   Envía un correo al usuario final con sus credenciales y contraseña temporal.
+*   Autogenera una contraseña temporal segura que cumple con las directivas de complejidad de Identity.
+*   **Gestión de Foto de Perfil**: Si se proporciona un archivo de imagen en la propiedad `photo`, se crea recursivamente la carpeta local `wwwroot/uploads/profiles/` en el servidor (si no existe), se le genera un nombre seguro y único usando un GUID para evitar colisiones y path traversal, se escribe físicamente el archivo en disco, y se almacena la ruta de acceso relativa (ej. `/uploads/profiles/a5b6c7d8e9f0...jpg`) en el campo `PhotoUrl` del registro de usuario. Si se produce un error durante la creación definitiva del registro en la base de datos, el archivo cargado se elimina de forma automática y preventiva para evitar almacenamiento basura.
+*   Registra el usuario con `EmailConfirmed = true` (ya confirmado automáticamente por el administrador) y `PasswordConfirmed = false` (indica que debe ser cambiada en el primer ingreso).
+*   Envía un correo de bienvenida al usuario final con sus credenciales y contraseña temporal.
 
 #### Respuesta Exitosa (`201 Created`)
-Retorna `CreateUserResponse` con los detalles básicos:
+Retorna `CreateUserResponse` con los detalles del usuario creado e incluye la ruta de acceso a la foto cargada:
 ```json
 {
-  "id": "string",
+  "id": "d748f65e-2b1a-42c3-98fe-d27e7fcd61a2",
   "email": "nuevo.usuario@example.com",
   "name": "Juan",
   "lastName": "Pérez",
+  "photoUrl": "/uploads/profiles/7a2be748f65e2b1a42c398fed27e7fcd.jpg",
   "passwordConfirmed": false
 }
 ```
 
 #### Otras Respuestas
-*   **`400 Bad Request`**: Datos inválidos en el cuerpo (problema de validación).
+*   **`400 Bad Request`**: Datos inválidos en el formulario enviado (problema de validación).
 *   **`409 Conflict`**: Si el email provisto ya se encuentra registrado.
 
 ---
 
-## 2. Gestión de Roles del Usuario (Tag: `Users`)
+## 2. Gestión de Roles (Tags: `Users` / `Roles`)
+
+### Listar Todos los Roles (`GET /api/roles`)
+
+*   **Ruta:** `GET /api/roles`
+*   **Nombre de Acción:** `ListRoles`
+*   **Autorización:** Ninguna (Acceso Público, utilizado por el frontend para mostrar roles en dropdowns).
+
+#### Respuesta Exitosa (`200 OK`)
+Devuelve una lista de todos los roles registrados en el sistema, incluyendo el conteo total de usuarios asignados a cada uno (`ListRolesResponse`):
+
+```json
+[
+  {
+    "id": "admin-role-uuid-1111",
+    "name": "Admin",
+    "description": "Administrador del sistema con acceso total",
+    "isActive": true,
+    "createdAt": "2026-06-02T03:28:12Z",
+    "assignedUsersCount": 3
+  },
+  {
+    "id": "user-role-uuid-2222",
+    "name": "User",
+    "description": "Usuario estándar de la plataforma",
+    "isActive": true,
+    "createdAt": "2026-06-02T03:28:12Z",
+    "assignedUsersCount": 42
+  }
+]
+```
+
+---
+
+### Actualizar un Rol (`PUT /api/roles/{id}`)
+
+*   **Ruta:** `PUT /api/roles/{id}`
+*   **Nombre de Acción:** `UpdateRole`
+*   **Autorización:** Requerido (`.RequireAuthorization()`)
+*   **Parámetros de Ruta:**
+    *   `id` (string, Requerido): ID único del rol a actualizar.
+
+#### Cuerpo de la Solicitud (Request Body - JSON)
+```json
+{
+  "roleName": "Admin Modificado",
+  "description": "Nueva descripción para el rol",
+  "isActive": true
+}
+```
+*   **Validaciones:**
+    *   `roleName`: Requerido, no vacío, máximo 50 caracteres.
+
+#### Respuesta Exitosa (`200 OK`)
+Retorna un objeto `UpdateRoleResponse` con los datos actualizados del rol:
+```json
+{
+  "id": "admin-role-uuid-1111",
+  "name": "Admin Modificado",
+  "description": "Nueva descripción para el rol",
+  "isActive": true,
+  "createdAt": "2026-06-02T03:28:12Z"
+}
+```
+
+#### Otras Respuestas
+*   **`400 Bad Request`**: Datos inválidos en la solicitud.
+*   **`401 Unauthorized`**: El usuario no ha proporcionado credenciales de autenticación válidas.
+*   **`404 Not Found`**: No se encuentra un rol con el `id` provisto.
+*   **`409 Conflict`**: Ya existe otro rol con el nuevo nombre provisto en `roleName`.
+
+---
+
+### Activar o Inactivar un Rol (`PATCH /api/roles/{id}/toggle-status`)
+
+*   **Ruta:** `PATCH /api/roles/{id}/toggle-status`
+*   **Nombre de Acción:** `ToggleRoleStatus`
+*   **Autorización:** Requerido (`.RequireAuthorization()`)
+*   **Parámetros de Ruta:**
+    *   `id` (string, Requerido): ID único del rol a activar/inactivar.
+
+#### Respuesta Exitosa (`200 OK`)
+Devuelve un objeto `ToggleRoleStatusResponse` con el estado actualizado del rol:
+```json
+{
+  "id": "admin-role-uuid-1111",
+  "name": "Admin",
+  "isActive": false,
+  "status": "Inactivado"
+}
+```
+
+#### Otras Respuestas
+*   **`401 Unauthorized`**: El usuario no ha proporcionado credenciales de autenticación válidas.
+*   **`404 Not Found`**: No se encuentra un rol con el `id` provisto.
+
+---
 
 ### Obtener Roles de un Usuario (`GET /api/users/{userId}/roles`)
 
@@ -464,10 +570,15 @@ Estos endpoints forman parte integral de la gestión e identidad del usuario, co
   "email": "juan.perez@example.com",
   "password": "SecurePassword123!",
   "phone": "+1234567890",
-  "dateOfBirth": "1990-05-15T00:00:00Z"
+  "dateOfBirth": "1990-05-15"
 }
 ```
-*   **Validaciones básicas de Contraseña:** Mínimo 8 caracteres, al menos una mayúscula, una minúscula, un dígito y un carácter especial.
+*   **Validaciones:**
+    *   `name`: Obligatorio, longitud máxima 100 caracteres.
+    *   `lastName`: Obligatorio, longitud máxima 100 caracteres.
+    *   `email`: Obligatorio, formato de email válido y único.
+    *   `password`: Obligatorio. Mínimo 8 caracteres, al menos una mayúscula, una minúscula, un dígito y un carácter especial.
+    *   `dateOfBirth`: Opcional, debe tener un formato de fecha válido `yyyy-MM-dd`.
 
 #### Respuesta Exitosa (`201 Created`)
 Genera la cuenta en la base de datos, autocalcula un token de sesión JWT, genera un refresh token y retorna `RegisterResponse`:
@@ -511,7 +622,8 @@ Retorna `LoginResponse` incluyendo el JWT generado y el Refresh Token persistido
 ```
 
 #### Otras Respuestas
-*   **`400 Bad Request`**: Credenciales de inicio de sesión erróneas, cuenta inexistente, o bien el usuario no cuenta con un **Grupo Familiar** activo asociado (mensaje: `"Sin grupo asociado"`, detalle: `"El usuario no tiene un Grupo Familiar activo asociado."`).
+*   **`401 Unauthorized`**: Credenciales de inicio de sesión erróneas o cuenta inexistente (mensaje: `"Credenciales inválidas"`).
+*   **`403 Forbidden`**: Si la cuenta del usuario se encuentra actualmente bloqueada (mensaje: `"Usuario bloqueado"`, detalle: `"Tu cuenta se encuentra bloqueada. Contacta al administrador."`).
 
 ---
 

@@ -1,0 +1,19 @@
+# Node.js / React / Vite
+node_modules/
+dist/
+build/
+*.log
+.env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Editor files
+.vscode/
+.idea/
+*.suo
+*.user
+*.sln
+.DS_Store
+Thumbs.db

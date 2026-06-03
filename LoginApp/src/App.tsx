@@ -7,6 +7,8 @@ import Register from './pages/Register';
 import RecoverPassword from './pages/RecoverPassword';
 import ForcePasswordChange from './pages/ForcePasswordChange';
 import MainLayout from './layouts/MainLayout';
+import UserMaintenance from './pages/UserMaintenance';
+import RoleMaintenance from './pages/RoleMaintenance';
 
 // Route Guard: Protected paths requiring authentication
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -129,6 +131,8 @@ const App: React.FC = () => {
             }
           >
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/admin/users" element={<UserMaintenance />} />
+            <Route path="/admin/roles" element={<RoleMaintenance />} />
           </Route>
           <Route
             path="/force-password-change"
