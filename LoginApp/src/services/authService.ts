@@ -60,7 +60,7 @@ export const authService = {
   },
 
   /**
-   * Updates a user profile in the backend
+   * Updates a user profile in the backend using FormData
    */
   async updateUser(
     id: string,
@@ -68,16 +68,30 @@ export const authService = {
     lastName: string,
     dateOfBirth?: string,
     phoneNumber?: string,
-    photoUrl?: string,
+    photo?: File | null,
     address?: string
   ): Promise<any> {
-    const response = await apiClient.put(`/auth/users/${id}`, {
-      name,
-      lastName,
-      dateOfBirth,
-      phoneNumber,
-      photoUrl,
-      address,
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('lastName', lastName);
+    
+    if (dateOfBirth) {
+      formData.append('dateOfBirth', dateOfBirth);
+    }
+    if (phoneNumber) {
+      formData.append('phoneNumber', phoneNumber);
+    }
+    if (photo) {
+      formData.append('photo', photo, photo.name);
+    }
+    if (address) {
+      formData.append('address', address);
+    }
+
+    const response = await apiClient.put(`/auth/users/${id}`, formData, {
+      headers: {
+        'Content-Type': undefined,
+      },
     });
     return response.data;
   },

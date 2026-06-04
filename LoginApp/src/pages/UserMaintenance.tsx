@@ -444,7 +444,7 @@ export const UserMaintenance: React.FC = () => {
             onClick={() => setViewMode("cards")}
             className={`p-1.5 rounded-lg transition-all cursor-pointer focus:outline-none
               ${
-                viewMode === "table"
+                viewMode === "cards"
                   ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
                   : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
               }`}
@@ -471,7 +471,7 @@ export const UserMaintenance: React.FC = () => {
             onClick={() => setViewMode("table")}
             className={`p-1.5 rounded-lg transition-all cursor-pointer focus:outline-none
               ${
-                viewMode === "cards"
+                viewMode === "table"
                   ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
                   : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
               }`}

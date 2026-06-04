@@ -179,22 +179,28 @@ Retorna un objeto `PaginatedResult<PagedUserItem>` que incluye metadatos de la p
 *   **Parámetros de Ruta:**
     *   `id` (string, Requerido): ID único del usuario a actualizar.
 
-#### Cuerpo de la Solicitud (Request Body - JSON)
-Objeto `UpdateUserCommand` con los campos actualizables:
-```json
-{
-  "name": "Juan",
-  "lastName": "Pérez",
-  "dateOfBirth": "1990-05-15",
-  "phoneNumber": "+1234567890",
-  "photoUrl": "https://example.com/avatar.jpg",
-  "address": "Calle Falsa 123"
-}
-```
-*   **Validaciones:**
-    *   `name`: Obligatorio, longitud máxima 100 caracteres.
-    *   `lastName`: Obligatorio, longitud máxima 100 caracteres.
-    *   `dateOfBirth`: Opcional, debe tener un formato de fecha válido `yyyy-MM-dd`.
+#### Cuerpo de la Solicitud (FormData / `multipart/form-data`)
+La petición debe enviarse codificada como formulario (`multipart/form-data`) con los siguientes campos:
+
+*   `name` (string, Requerido): Nombre del usuario. Máx. 100 caracteres.
+*   `lastName` (string, Requerido): Apellido del usuario. Máx. 100 caracteres.
+*   `dateOfBirth` (string, Opcional): Fecha de nacimiento en formato `yyyy-MM-dd`.
+*   `phoneNumber` (string, Opcional): Teléfono del usuario.
+*   `photo` (file / IFormFile, Opcional): Nuevo archivo de imagen para la foto de perfil. Si se omite, se conserva la foto de perfil actual.
+*   `address` (string, Opcional): Dirección del usuario.
+
+> [!IMPORTANT]
+> **Recomendación para el FrontEnd (React / JS / TS)**:
+> Al enviar un formulario con archivos utilizando `FormData`, **NO debes definir manualmente la cabecera `'Content-Type'`** en la petición. El navegador se encargará de inyectar `multipart/form-data` junto con el parámetro `boundary`.
+
+#### Comportamiento
+*   Valida los campos obligatorios del formulario.
+*   Si se proporciona una nueva foto en `photo`:
+    *   Primero se guardan los datos textuales y el nuevo path en la base de datos.
+    *   Se escribe el archivo de imagen físicamente en el servidor (`wwwroot/uploads/profiles/`).
+    *   Si se guarda correctamente, se elimina el archivo de imagen anterior del usuario (si poseía una) para evitar almacenamiento basura.
+    *   **Atomicidad**: Si la escritura física del nuevo archivo falla, se realiza un rollback automático restaurando el path de la imagen anterior en la base de datos y se devuelve un `500 Internal Server Error`.
+*   Si `photo` es nulo, los datos de usuario se actualizan y se conserva la imagen que ya poseía.
 
 #### Respuesta Exitosa (`200 OK`)
 Retorna `UpdateUserResponse` confirmando los cambios realizados:
@@ -206,7 +212,7 @@ Retorna `UpdateUserResponse` confirmando los cambios realizados:
   "lastName": "Pérez",
   "dateOfBirth": "1990-05-15T00:00:00Z",
   "phoneNumber": "+1234567890",
-  "photoUrl": "https://example.com/avatar.jpg",
+  "photoUrl": "/uploads/profiles/7a2be748f65e2b1a42c398fed27e7fcd.jpg",
   "address": "Calle Falsa 123"
 }
 ```
@@ -214,6 +220,7 @@ Retorna `UpdateUserResponse` confirmando los cambios realizados:
 #### Otras Respuestas
 *   **`400 Bad Request`**: Datos inválidos en el cuerpo (problema de validación).
 *   **`404 Not Found`**: El usuario no existe en el sistema.
+*   **`500 Internal Server Error`**: Ocurrió un error físico en el disco al guardar la nueva imagen, resultando en un rollback del registro a su estado anterior.
 
 ---
 

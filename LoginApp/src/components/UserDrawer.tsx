@@ -63,6 +63,7 @@ export const UserDrawer: React.FC<UserDrawerProps> = ({
   useEffect(() => {
     setMode(initialMode);
     setErrors({});
+    setPhotoFile(null);
   }, [initialMode, isOpen]);
 
   // Load family groups on mount if drawer is open
@@ -232,7 +233,7 @@ export const UserDrawer: React.FC<UserDrawerProps> = ({
           lastName,
           dateOfBirth: dob || undefined, // Standardized yyyy-MM-dd
           phoneNumber: phone || undefined,
-          photoUrl: photoUrl || undefined,
+          photo: photoFile,
           address: address || undefined,
         });
         toast.success('Información de usuario actualizada.');
