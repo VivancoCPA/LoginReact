@@ -1,0 +1,6 @@
+- [x] Create center types TypeScript types file at `LoginApp/src/types/centerType.ts`
+- [x] Create Axios backend communication service at `LoginApp/src/services/centerTypeService.ts`
+- [x] Create slide-over CRUD form panel drawer component at `LoginApp/src/components/CenterTypeDrawer.tsx`
+- [x] Create main dashboard console page at `LoginApp/src/pages/CenterTypeMaintenance.tsx`
+- [x] Register center types page route in `LoginApp/src/App.tsx`
+- [x] Perform compilation verification and lint check using Vite builds
