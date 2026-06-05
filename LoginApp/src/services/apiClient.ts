@@ -98,6 +98,15 @@ apiClient.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
+
+    // Automatically remove Content-Type for FormData uploads so the browser can attach the correct boundary
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers['Content-Type'];
+      if (typeof config.headers.delete === 'function') {
+        config.headers.delete('Content-Type');
+      }
+    }
+
     return config;
   },
   (error) => {

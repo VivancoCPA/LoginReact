@@ -13,6 +13,7 @@ import InsurerMaintenance from './pages/InsurerMaintenance';
 import SpecialtyMaintenance from './pages/SpecialtyMaintenance';
 import CenterTypeMaintenance from './pages/CenterTypeMaintenance';
 import MedicalCenterMaintenance from './pages/MedicalCenterMaintenance';
+import DoctorMaintenance from './pages/DoctorMaintenance';
 
 // Route Guard: Protected paths requiring authentication
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -141,6 +142,7 @@ const App: React.FC = () => {
             <Route path="/admin/specialties" element={<SpecialtyMaintenance />} />
             <Route path="/admin/center-types" element={<CenterTypeMaintenance />} />
             <Route path="/admin/medical-centers" element={<MedicalCenterMaintenance />} />
+            <Route path="/admin/doctors" element={<DoctorMaintenance />} />
           </Route>
           <Route
             path="/force-password-change"

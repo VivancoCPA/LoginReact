@@ -205,9 +205,9 @@ export const InsurerMaintenance: React.FC = () => {
   const filteredInsurers = getFilteredInsurers();
 
   return (
-    <div className="flex flex-col gap-6 w-full text-left">
+    <div className="flex flex-col h-full w-full text-left overflow-hidden gap-4">
       {/* Title Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wide">
             Mantenimiento de Aseguradoras
@@ -230,7 +230,7 @@ export const InsurerMaintenance: React.FC = () => {
       </div>
 
       {/* FILTER AND ACTION BAR */}
-      <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-4 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shadow-sm select-none">
+      <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-4 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shadow-sm select-none shrink-0">
         
         <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 flex-1">
           {/* Search bar */}
@@ -314,7 +314,8 @@ export const InsurerMaintenance: React.FC = () => {
       </div>
 
       {/* Render Listings */}
-      {isLoading ? (
+      <div className="flex-1 overflow-y-auto min-h-0 pr-1 -mr-1">
+        {isLoading ? (
         // Loading animation skeleton (matches UserMaintenance)
         <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm">
           <div className="space-y-4">
@@ -661,9 +662,10 @@ export const InsurerMaintenance: React.FC = () => {
           ))}
         </div>
       )}
+      </div>
 
       {/* CLIENT-SIDE / SERVER-SIDE PAGINATION FOOTER CONTROL PANEL */}
-      <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 select-none">
+      <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 select-none shrink-0 border-t border-slate-100 dark:border-slate-800/60 pt-4">
         <span className="text-xs text-slate-500 dark:text-slate-400">
           Mostrando{' '}
           <span className="font-semibold text-slate-700 dark:text-slate-300">
