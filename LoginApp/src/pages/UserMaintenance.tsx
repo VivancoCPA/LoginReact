@@ -603,7 +603,7 @@ export const UserMaintenance: React.FC = () => {
                 {filteredUsers.map((user) => (
                   <tr
                     key={user.id}
-                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors"
+                    className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors ${user.isLockedOut ? "bg-slate-50/30 dark:bg-slate-950/10 opacity-60" : ""}`}
                   >
                     {/* Spacing constraint strictly respected using py-1.5 or py-2 */}
                     <td className="px-5 py-1.5 text-left">
@@ -622,11 +622,15 @@ export const UserMaintenance: React.FC = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-5 py-1.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-100">
-                      {user.name}
+                    <td className="px-5 py-1.5 text-left text-xs">
+                      <span className={`font-semibold text-slate-800 dark:text-slate-100 ${user.isLockedOut ? "text-slate-400 dark:text-slate-550 line-through decoration-slate-450/40" : ""}`}>
+                        {user.name}
+                      </span>
                     </td>
-                    <td className="px-5 py-1.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-100">
-                      {user.lastName}
+                    <td className="px-5 py-1.5 text-left text-xs">
+                      <span className={`font-semibold text-slate-800 dark:text-slate-100 ${user.isLockedOut ? "text-slate-400 dark:text-slate-550 line-through decoration-slate-450/40" : ""}`}>
+                        {user.lastName}
+                      </span>
                     </td>
                     <td className="px-5 py-1.5 text-left text-xs text-slate-600 dark:text-slate-300 font-mono select-all truncate max-w-xs">
                       {user.email}
@@ -834,7 +838,7 @@ export const UserMaintenance: React.FC = () => {
           {filteredUsers.map((user) => (
             <div
               key={user.id}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-lg dark:hover:border-slate-700/80 transition-all duration-300 group flex flex-col justify-between"
+              className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-lg dark:hover:border-slate-700/80 transition-all duration-300 group flex flex-col justify-between ${user.isLockedOut ? "bg-slate-50/30 dark:bg-slate-950/10 opacity-60" : ""}`}
             >
               <div>
                 {/* Header profile row */}
@@ -856,7 +860,7 @@ export const UserMaintenance: React.FC = () => {
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      <h3 className={`text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors ${user.isLockedOut ? "text-slate-400 dark:text-slate-500 line-through decoration-slate-450/40" : ""}`}>
                         {user.name} {user.lastName}
                       </h3>
                       <span

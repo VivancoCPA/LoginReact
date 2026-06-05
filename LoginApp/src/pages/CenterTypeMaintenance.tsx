@@ -349,10 +349,12 @@ export const CenterTypeMaintenance: React.FC = () => {
                 {filteredCenterTypes.map((type) => (
                   <tr
                     key={type.id}
-                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors"
+                    className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors ${!type.isActive ? 'bg-slate-50/30 dark:bg-slate-950/10 opacity-60' : ''}`}
                   >
-                    <td className="px-6 py-2.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-100 max-w-[300px] truncate align-middle">
-                      {type.name}
+                    <td className="px-6 py-2.5 text-left text-xs align-middle">
+                      <div className={`font-semibold text-slate-800 dark:text-slate-100 max-w-[300px] truncate ${!type.isActive ? 'text-slate-400 dark:text-slate-550 line-through decoration-slate-450/40' : ''}`}>
+                        {type.name}
+                      </div>
                     </td>
 
                     <td className="px-6 py-2.5 text-left text-xs select-none align-middle">
@@ -429,13 +431,13 @@ export const CenterTypeMaintenance: React.FC = () => {
           {filteredCenterTypes.map((type) => (
             <div
               key={type.id}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-lg dark:hover:border-slate-700/80 transition-all duration-300 group flex flex-col justify-between"
+              className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-lg dark:hover:border-slate-700/80 transition-all duration-300 group flex flex-col justify-between ${!type.isActive ? 'bg-slate-50/30 dark:bg-slate-950/10 opacity-60' : ''}`}
             >
               <div>
                 {/* Header card: Name and actions dots menu (no image initials) */}
                 <div className="flex items-start justify-between gap-3 select-none">
                   <div className="text-left space-y-1">
-                    <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
+                    <h3 className={`text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 ${!type.isActive ? 'text-slate-400 dark:text-slate-500 line-through decoration-slate-450/40' : ''}`}>
                       {type.name}
                     </h3>
                     <span className={`inline-flex px-1.5 py-0.5 text-[8px] font-bold uppercase rounded border

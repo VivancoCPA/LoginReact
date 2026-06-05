@@ -398,7 +398,7 @@ export const InsurerMaintenance: React.FC = () => {
                 {filteredInsurers.map((insurer) => (
                   <tr
                     key={insurer.id}
-                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors"
+                    className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors ${!insurer.isActive ? 'bg-slate-50/30 dark:bg-slate-950/10 opacity-60' : ''}`}
                   >
                     <td className="px-5 py-1.5 text-left align-middle">
                       <div
@@ -417,8 +417,10 @@ export const InsurerMaintenance: React.FC = () => {
                       </div>
                     </td>
 
-                    <td className="px-5 py-1.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-100 max-w-[200px] truncate align-middle">
-                      {insurer.name}
+                    <td className="px-5 py-1.5 text-left text-xs align-middle">
+                      <div className={`font-semibold text-slate-800 dark:text-slate-100 max-w-[200px] truncate ${!insurer.isActive ? 'text-slate-400 dark:text-slate-550 line-through decoration-slate-450/40' : ''}`}>
+                        {insurer.name}
+                      </div>
                     </td>
 
                     <td className="px-5 py-1.5 text-left text-xs text-slate-600 dark:text-slate-300 max-w-[220px] truncate align-middle">
@@ -503,7 +505,7 @@ export const InsurerMaintenance: React.FC = () => {
           {filteredInsurers.map((insurer) => (
             <div
               key={insurer.id}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-lg dark:hover:border-slate-700/80 transition-all duration-300 group flex flex-col justify-between"
+              className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-lg dark:hover:border-slate-700/80 transition-all duration-300 group flex flex-col justify-between ${!insurer.isActive ? 'bg-slate-50/30 dark:bg-slate-950/10 opacity-60' : ''}`}
             >
               <div>
                 {/* Header card: avatar circle and actions dots menu */}
@@ -525,7 +527,7 @@ export const InsurerMaintenance: React.FC = () => {
                     </div>
 
                     <div>
-                      <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
+                      <h3 className={`text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1 ${!insurer.isActive ? 'text-slate-400 dark:text-slate-500 line-through decoration-slate-450/40' : ''}`}>
                         {insurer.name}
                       </h3>
                       <span className={`inline-flex mt-1 px-1.5 py-0.5 text-[8px] font-bold uppercase rounded border
