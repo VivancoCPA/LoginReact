@@ -369,7 +369,7 @@ export const SpecialtyMaintenance: React.FC = () => {
 
 
                     <td className="px-5 py-1.5 text-left text-xs align-middle">
-                      <div className="font-semibold text-slate-800 dark:text-slate-100 max-w-[300px] truncate">
+                      <div className={`font-semibold text-slate-800 dark:text-slate-100 max-w-[300px] truncate ${!specialty.isActive ? 'text-slate-400 dark:text-slate-550 line-through decoration-slate-450/40' : ''}`}>
                         {specialty.name}
                       </div>
                       {specialty.description && (
@@ -466,7 +466,7 @@ export const SpecialtyMaintenance: React.FC = () => {
                     </div>
                     <div className="space-y-1.5 text-left max-w-[80%]">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-150 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
+                        <h3 className={`text-sm font-bold text-slate-800 dark:text-slate-150 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1 ${!specialty.isActive ? 'text-slate-400 dark:text-slate-500 line-through decoration-slate-450/40' : ''}`}>
                           {specialty.name}
                         </h3>
                         <span className={`inline-flex px-1.5 py-0.5 text-[8px] font-bold uppercase rounded border
