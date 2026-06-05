@@ -122,15 +122,8 @@ export const SpecialtyMaintenance: React.FC = () => {
   // Status Inactivation / Activation confirm triggers
   const handleToggleStatusClick = (specialty: SpecialtyItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-
-    if (specialty.isActive) {
-      // Prompt confirm dialog on logical deactivation
-      setSpecialtyToToggle(specialty);
-      setIsConfirmOpen(true);
-    } else {
-      // Activate immediately or via toggle service call
-      toggleStatus(specialty);
-    }
+    setSpecialtyToToggle(specialty);
+    setIsConfirmOpen(true);
   };
 
   const toggleStatus = async (specialty: SpecialtyItem) => {
@@ -371,7 +364,7 @@ export const SpecialtyMaintenance: React.FC = () => {
                 {filteredSpecialties.map((specialty) => (
                   <tr
                     key={specialty.id}
-                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors"
+                    className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors ${!specialty.isActive ? 'bg-slate-50/30 dark:bg-slate-950/10 opacity-60' : ''}`}
                   >
 
 
@@ -460,7 +453,7 @@ export const SpecialtyMaintenance: React.FC = () => {
           {filteredSpecialties.map((specialty) => (
             <div
               key={specialty.id}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-lg dark:hover:border-slate-700/80 transition-all duration-300 group flex flex-col justify-between"
+              className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-lg dark:hover:border-slate-700/80 transition-all duration-300 group flex flex-col justify-between ${!specialty.isActive ? 'bg-slate-50/30 dark:bg-slate-950/10 opacity-60' : ''}`}
             >
               <div>
                 {/* Header card: initials visual badge and actions dropdown dots */}
@@ -684,10 +677,14 @@ export const SpecialtyMaintenance: React.FC = () => {
           setSpecialtyToToggle(null);
         }}
         onConfirm={handleConfirmToggleStatus}
-        title="Desactivar Especialidad"
-        message="Esta especialidad ya no estará disponible para nuevos médicos. ¿Desea continuar?"
-        confirmText="Desactivar"
-        confirmColor="danger"
+        title={specialtyToToggle?.isActive ? 'Desactivar Especialidad' : 'Activar Especialidad'}
+        message={
+          specialtyToToggle?.isActive
+            ? `Esta especialidad ya no estará disponible para nuevos médicos. ¿Desea desactivar "${specialtyToToggle?.name || ''}"?`
+            : `Esta especialidad volverá a estar disponible para asignaciones de médicos. ¿Desea activar "${specialtyToToggle?.name || ''}"?`
+        }
+        confirmText={specialtyToToggle?.isActive ? 'Desactivar' : 'Activar'}
+        confirmColor={specialtyToToggle?.isActive ? 'danger' : 'indigo'}
         isLoading={isTogglingStatus}
       />
 
