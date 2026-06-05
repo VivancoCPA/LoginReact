@@ -77,10 +77,18 @@ export const CenterTypeMaintenance: React.FC = () => {
         apiSortBy = 'isActive';
       }
 
+      let isActiveParam: boolean | null = null;
+      if (statusFilter === 'active') {
+        isActiveParam = true;
+      } else if (statusFilter === 'inactive') {
+        isActiveParam = false;
+      }
+
       const data = await centerTypeService.getPagedCenterTypes({
         page,
         pageSize,
         search: debouncedSearch,
+        isActive: isActiveParam,
         sortBy: apiSortBy,
         sortDesc,
       });
@@ -94,7 +102,7 @@ export const CenterTypeMaintenance: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [page, pageSize, debouncedSearch, sortBy, sortDesc]);
+  }, [page, pageSize, debouncedSearch, statusFilter, sortBy, sortDesc]);
 
   // Fetch on parameter change
   useEffect(() => {
@@ -156,20 +164,7 @@ export const CenterTypeMaintenance: React.FC = () => {
     toggleStatus(centerTypeToToggle);
   };
 
-  // Client-side filtering of status filter
-  const getFilteredCenterTypes = () => {
-    let items = centerTypes;
-
-    if (statusFilter === 'active') {
-      items = items.filter((i) => i.isActive);
-    } else if (statusFilter === 'inactive') {
-      items = items.filter((i) => !i.isActive);
-    }
-
-    return items;
-  };
-
-  const filteredCenterTypes = getFilteredCenterTypes();
+  const filteredCenterTypes = centerTypes;
 
   return (
     <div className="flex flex-col h-full w-full text-left overflow-hidden gap-4">

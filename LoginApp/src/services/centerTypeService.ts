@@ -25,6 +25,7 @@ export const centerTypeService = {
     page?: number;
     pageSize?: number;
     search?: string | null;
+    isActive?: boolean | null;
     sortBy?: string;
     sortDesc?: boolean;
   }): Promise<PaginatedCenterTypesResult> {
@@ -33,6 +34,7 @@ export const centerTypeService = {
         page: params.page ?? 1,
         pageSize: params.pageSize ?? 10,
         search: params.search || undefined,
+        isActive: params.isActive !== null && params.isActive !== undefined ? params.isActive : undefined,
         sortBy: params.sortBy ?? 'created_at',
         sortDesc: params.sortDesc ?? false,
       },
