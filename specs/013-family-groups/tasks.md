@@ -1,0 +1,31 @@
+# Task List: Family Groups (Grupos Familiares)
+
+- [ ] **Phase 1: Setup & Types**
+  - [ ] T001 Define TypeScript interfaces in `LoginApp/src/types/familyGroup.ts`
+  - [ ] T002 Verify Topbar breadcrumbs in `LoginApp/src/components/Topbar.tsx`
+- [ ] **Phase 2: Services**
+  - [ ] T003 Implement Axios endpoints in `LoginApp/src/services/familyGroupService.ts` (Groups, Relationships, Members, Extra Members)
+- [ ] **Phase 3: User Story 1 - Dashboard & Cards Grid (Priority: P1) 🎯 MVP**
+  - [ ] T004 Register route `/patients/family-group` in `LoginApp/src/App.tsx` pointing to `<FamilyGroupMaintenance />`
+  - [ ] T005 Create fixed-height page skeleton in `LoginApp/src/pages/FamilyGroupMaintenance.tsx`
+  - [ ] T006 Implement search bar, status tabs, and "Ver Incidentes" toggle (with sessionStorage key `familyGroupsShowIncidents`)
+  - [ ] T007 Implement 3/4 dashboard grid and 1/4 right sidebar for Mock Incidents (5 incidents)
+  - [ ] T008 Implement card rendering (distinguish user-created from member-only groups via light green bg; display avatars, extra members)
+  - [ ] T009 Implement global pagination footer in `LoginApp/src/pages/FamilyGroupMaintenance.tsx`
+  - [ ] T010 Fetch user profile by email on mount to determine current user GUID (`currentUserId`)
+- [ ] **Phase 4: User Story 2 - Group Management (CRUD) (Priority: P2)**
+  - [ ] T011 Create `FamilyGroupDrawer.tsx` slide-over shell with tabbed sections
+  - [ ] T012 Implement Tab 1 (General Info): Name validation (>= 2 chars), avatar photo file selector (size <= 2MB, sent as `Photo` via FormData)
+  - [ ] T013 Implement Create (POST FormData) and Edit (PUT FormData) group logic
+  - [ ] T014 Implement logical toggle status PATCH confirmation modal flow
+  - [ ] T015 Enforce read-only state in `FamilyGroupDrawer.tsx` when opened for a member-only group
+- [ ] **Phase 5: User Story 3 - Member Management (Priority: P3)**
+  - [ ] T016 Implement Tab 2 (Miembros del Sistema): Fetch users and relationship lookups
+  - [ ] T017 Implement member assignation (prevent duplicates, restrict to max 1 Parent/Admin)
+  - [ ] T018 Implement member removal (DELETE)
+- [ ] **Phase 6: User Story 4 - Extra Members Management (Priority: P3)**
+  - [ ] T019 Implement Tab 3 (Miembros Extra): List and manage extra members
+  - [ ] T020 Implement CRUD actions for extra members (POST/PUT FormData with file under `Photo`, PATCH toggle, DELETE)
+- [ ] **Phase 7: Polish & Verification**
+  - [ ] T021 Run `npm run build` from `LoginApp/` to verify production compilation
+  - [ ] T022 Validate functional scenarios in `specs/013-family-groups/spec.md`
