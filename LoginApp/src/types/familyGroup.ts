@@ -10,6 +10,10 @@ export interface FamilyMembershipItem {
   userName?: string;
   userLastName?: string;
   userPhotoUrl?: string;
+  email?: string;
+  name?: string;
+  lastName?: string;
+  photoUrl?: string;
   isAdmin: boolean;
   relationship: string;
   isActive: boolean;

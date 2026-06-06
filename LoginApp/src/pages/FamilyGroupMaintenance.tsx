@@ -28,7 +28,7 @@ export const FamilyGroupMaintenance: React.FC = () => {
   // Layout toggle (Ver Incidentes / No Ver Incidentes) persisted in session
   const [showIncidents, setShowIncidents] = useState<boolean>(() => {
     const saved = sessionStorage.getItem('familyGroupsShowIncidents');
-    return saved === 'true';
+    return saved !== 'false';
   });
 
   const [groups, setGroups] = useState<FamilyGroupItem[]>([]);
@@ -306,24 +306,30 @@ export const FamilyGroupMaintenance: React.FC = () => {
 
     return (
       <div className="flex -space-x-1.5 overflow-hidden py-1 shrink-0 select-none">
-        {displayMembers.map((m) => (
-          <div
-            key={m.id}
-            className={`inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-900 overflow-hidden shrink-0 flex items-center justify-center font-bold text-[9px]
-              ${m.userPhotoUrl ? "" : getAvatarColor(m.userId)}`}
-            title={`${m.userName || ''} ${m.userLastName || ''} (${m.relationship})`}
-          >
-            {m.userPhotoUrl ? (
-              <img
-                src={getPhotoFullUrl(m.userPhotoUrl)}
-                alt={m.userName}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              getInitials(m.userName || '', m.userLastName || '')
-            )}
-          </div>
-        ))}
+        {displayMembers.map((m) => {
+          const name = m.name || m.userName || '';
+          const lastName = m.lastName || m.userLastName || '';
+          const photoUrl = m.photoUrl || m.userPhotoUrl || '';
+          
+          return (
+            <div
+              key={m.id}
+              className={`inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-900 overflow-hidden shrink-0 flex items-center justify-center font-bold text-[9px]
+                ${photoUrl ? "" : getAvatarColor(m.userId)}`}
+              title={`${name} ${lastName} (${m.relationship})`}
+            >
+              {photoUrl ? (
+                <img
+                  src={getPhotoFullUrl(photoUrl)}
+                  alt={name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                getInitials(name, lastName)
+              )}
+            </div>
+          );
+        })}
         {remaining > 0 && (
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-[9px] font-bold text-slate-500 dark:text-slate-400 ring-2 ring-white dark:ring-slate-900 shrink-0 select-none">
             +{remaining}
@@ -355,7 +361,7 @@ export const FamilyGroupMaintenance: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowIncidents((prev) => !prev)}
-              className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer focus:outline-none"
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-slate-700 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-all cursor-pointer focus:outline-none shadow-sm"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-4 h-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-1.5 3h1.5m-1.5 3h1.5m-7.5-3h.008v.008H4.5v-.008Zm0-3h.008v.008H4.5v-.008Zm0-3h.008v.008H4.5v-.008Zm0 9h.008v.008H4.5v-.008Zm15 0h.008v.008H19.5v-.008Zm0-3h.008v.008H19.5v-.008Zm0-3h.008v.008H19.5v-.008Zm0-9h.008v.008H19.5V3.75m-6.75 3h.008v.008h-.008V6.75Zm.008 3h-.008v.008h.008V9.75Zm-.008 3h.008v.008h-.008v-.008Zm0-6H12v.008h-.008V3.75m-6 0h.008v.008H6V3.75m0 3H6.008v.008H6V6.75Zm12-3h.008v.008H18V3.75Zm-6-3h.008v.008h-.008V.75Zm-6 0h.008v.008H6V.75Zm12 0h.008v.008H18V.75Zm-6 12h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
