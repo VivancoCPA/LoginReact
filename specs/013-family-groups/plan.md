@@ -39,6 +39,7 @@ The module will provide:
 - **Constraints**: 
   - Photos must be sent via `FormData` using `Photo` as the file key. No local base64 representations in `logoUrl` or `photoUrl` JSON properties.
   - Non-creators (regular members) can only view the group details and cannot create, edit, toggle group status, or manage members.
+  - Al crear un Grupo Familiar, el usuario creador enviado en la solicitud (`userId`) debe ser obligatoriamente el usuario actualmente autenticado (obtenido del contexto de sesión mediante `useAuth()`).
 
 ---
 
