@@ -87,6 +87,7 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
   const [assignRelationship, setAssignRelationship] = useState('');
   const [assignIsAdmin, setAssignIsAdmin] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
+  const [assignFormMode, setAssignFormMode] = useState<'create' | 'edit'>('create');
 
   // Member Confirm Delete
   const [isConfirmMemberOpen, setIsConfirmMemberOpen] = useState(false);
@@ -135,6 +136,7 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
     if (isOpen) {
       setActiveTab('general');
       setShowAssignForm(false);
+      setAssignFormMode('create');
       setShowExtraForm(false);
       
       // Load Relationship lookups once on drawer open
@@ -302,6 +304,42 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
     e.preventDefault();
     if (!group || !selectedUser || !assignRelationship || isAssigning) return;
 
+    if (assignFormMode === 'edit') {
+      // Enforce only 1 Admin/Parent per group
+      if (assignIsAdmin) {
+        const hasAdmin = members.some((m) => m.isAdmin && m.userId !== selectedUser.id);
+        if (hasAdmin) {
+          toast.error('Solo se permite tener un Administrador (Parent) por grupo familiar.');
+          return;
+        }
+      }
+
+      setIsAssigning(true);
+      try {
+        // Remove old membership
+        await familyGroupService.removeMember(group.id, selectedUser.id);
+        // Add new membership with updated values
+        await familyGroupService.assignMember(group.id, {
+          userId: selectedUser.id,
+          isAdmin: assignIsAdmin,
+          relationship: assignRelationship,
+        });
+        toast.success('Miembro actualizado correctamente.');
+        setSelectedUser(null);
+        setAssignIsAdmin(false);
+        setShowAssignForm(false);
+        setAssignFormMode('create');
+        fetchMembersList();
+      } catch (err: any) {
+        console.error(err);
+        const msg = err.response?.data?.message || err.response?.data?.detail || 'No se pudo actualizar el miembro. Verifique los datos.';
+        toast.error(msg);
+      } finally {
+        setIsAssigning(false);
+      }
+      return;
+    }
+
     // 1. Prevent duplicate assignments
     const isAlreadyMember = members.some((m) => m.userId === selectedUser.id);
     if (isAlreadyMember) {
@@ -337,6 +375,33 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
     } finally {
       setIsAssigning(false);
     }
+  };
+
+  const handleOpenAssignMember = () => {
+    setAssignFormMode('create');
+    setSelectedUser(null);
+    if (relationships.length > 0) {
+      setAssignRelationship(relationships[0].id);
+    }
+    setAssignIsAdmin(false);
+    setShowAssignForm(true);
+  };
+
+  const handleOpenMemberEdit = (m: FamilyMembershipItem) => {
+    setAssignFormMode('edit');
+    setSelectedUser({
+      id: m.userId,
+      email: m.userEmail || m.email || '',
+      name: m.userName || m.name || '',
+      lastName: m.userLastName || m.lastName || '',
+      emailConfirmed: true,
+      isLockedOut: false,
+      createdAt: '',
+      passwordConfirmed: true
+    });
+    setAssignRelationship(m.relationship);
+    setAssignIsAdmin(m.isAdmin);
+    setShowAssignForm(true);
   };
 
   const handleRemoveMemberClick = (m: FamilyMembershipItem) => {
@@ -661,7 +726,7 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
                     {!showAssignForm ? (
                       <button
                         type="button"
-                        onClick={() => setShowAssignForm(true)}
+                        onClick={handleOpenAssignMember}
                         className="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/45 text-indigo-600 dark:text-indigo-400 text-xs font-bold rounded-lg transition-colors cursor-pointer"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3.5 h-3.5">
@@ -673,13 +738,14 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
                       <form onSubmit={handleAssignMemberSubmit} className="p-4 border border-indigo-100 dark:border-indigo-950 bg-indigo-50/10 dark:bg-indigo-950/5 rounded-xl space-y-4">
                         <div className="flex justify-between items-center border-b border-indigo-100/50 dark:border-indigo-950 pb-2">
                           <h4 className="text-xs font-bold text-indigo-650 dark:text-indigo-400 uppercase tracking-wider">
-                            Asignar Nuevo Miembro
+                            {assignFormMode === 'create' ? 'Asignar Nuevo Miembro' : 'Editar Relación de Miembro'}
                           </h4>
                           <button
                             type="button"
                             onClick={() => {
                               setShowAssignForm(false);
                               setSelectedUser(null);
+                              setAssignFormMode('create');
                             }}
                             className="text-slate-400 hover:text-slate-600 text-xs cursor-pointer focus:outline-none"
                           >
@@ -734,13 +800,15 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
                                 {selectedUser.email}
                               </p>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedUser(null)}
-                              className="text-xs text-red-500 hover:text-red-700 font-bold focus:outline-none"
-                            >
-                              Remover
-                            </button>
+                            {assignFormMode === 'create' && (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedUser(null)}
+                                className="text-xs text-red-500 hover:text-red-700 font-bold focus:outline-none"
+                              >
+                                Remover
+                              </button>
+                            )}
                           </div>
                         )}
 
@@ -782,7 +850,9 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
                           disabled={!selectedUser || isAssigning}
                           className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs rounded-lg shadow cursor-pointer focus:outline-none"
                         >
-                          {isAssigning ? 'Asignando...' : 'Confirmar Asignación'}
+                          {isAssigning 
+                            ? (assignFormMode === 'create' ? 'Asignando...' : 'Actualizando...') 
+                            : (assignFormMode === 'create' ? 'Confirmar Asignación' : 'Guardar Cambios')}
                         </button>
                       </form>
                     )}
@@ -848,6 +918,20 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
                             <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 dark:bg-slate-950/60 border dark:border-slate-800 text-slate-550 dark:text-slate-350 select-none">
                               {relationships.find((r) => r.id === m.relationship)?.label || m.relationship}
                             </span>
+
+                            {/* Edit button (Creator only) */}
+                            {isCreator && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenMemberEdit(m)}
+                                className="p-1 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors focus:outline-none"
+                                title="Editar relación"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                                </svg>
+                              </button>
+                            )}
 
                             {/* Remove button (Creator only, and can't remove oneself) */}
                             {isCreator && m.userId !== group.userId && (
