@@ -104,7 +104,7 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
   const [extraFormMode, setExtraFormMode] = useState<'create' | 'edit'>('create');
   const [selectedExtra, setSelectedExtra] = useState<FamilyExtraMembershipItem | null>(null);
   const [extraFullName, setExtraFullName] = useState('');
-  const [extraIdType, setExtraIdType] = useState('DNI');
+  const [extraIdType, setExtraIdType] = useState('Mascota');
   const [extraDescription, setExtraDescription] = useState('');
   const [extraIsActive, setExtraIsActive] = useState(true);
   const [extraPhotoFile, setExtraPhotoFile] = useState<File | null>(null);
@@ -368,7 +368,7 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
     setExtraFormMode('create');
     setSelectedExtra(null);
     setExtraFullName('');
-    setExtraIdType('DNI');
+    setExtraIdType('Mascota');
     setExtraDescription('');
     setExtraIsActive(true);
     setExtraPhotoFile(null);
@@ -967,15 +967,16 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                              Tipo de Documento *
+                              Tipo de Miembro *
                             </label>
-                            <input
-                              type="text"
+                            <select
                               value={extraIdType}
                               onChange={(e) => setExtraIdType(e.target.value)}
-                              placeholder="Ej. DNI, Pasaporte"
                               className="w-full px-3 py-2 border rounded-lg text-xs focus:outline-none bg-white dark:bg-slate-900 border-slate-350 dark:border-slate-700"
-                            />
+                            >
+                              <option value="Mascota">Mascota</option>
+                              <option value="Otros">Otros</option>
+                            </select>
                           </div>
 
                           {/* Extra Member active toggle (only in Edit mode) */}
@@ -1074,7 +1075,7 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
 
                           <div className="flex items-center gap-3">
                             <span className="inline-block px-1.5 py-0.5 rounded text-[8px] font-bold bg-slate-100 dark:bg-slate-950/60 border text-slate-500 select-none">
-                              DOC: {em.idType}
+                              Tipo: {em.idType}
                             </span>
 
                             {/* Actions (Creator only) */}
