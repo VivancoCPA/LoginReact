@@ -330,6 +330,7 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
         setShowAssignForm(false);
         setAssignFormMode('create');
         fetchMembersList();
+        onSaveSuccess();
       } catch (err: any) {
         console.error(err);
         const msg = err.response?.data?.message || err.response?.data?.detail || 'No se pudo actualizar el miembro. Verifique los datos.';
@@ -368,6 +369,7 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
       setAssignIsAdmin(false);
       setShowAssignForm(false);
       fetchMembersList();
+      onSaveSuccess();
     } catch (err: any) {
       console.error(err);
       const msg = err.response?.data?.message || err.response?.data?.detail || 'No se pudo asignar al usuario. Verifique que no pertenezca a otro grupo.';
@@ -418,6 +420,7 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
       setIsConfirmMemberOpen(false);
       setMemberToDelete(null);
       fetchMembersList();
+      onSaveSuccess();
     } catch (err: any) {
       console.error(err);
       toast.error('No se pudo desvincular al miembro del grupo.');
@@ -508,6 +511,7 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
       }
       setShowExtraForm(false);
       fetchExtrasList();
+      onSaveSuccess();
     } catch (err: any) {
       console.error(err);
       toast.error('Ocurrió un error al guardar el miembro extra.');
@@ -525,6 +529,7 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
         `Miembro extra "${em.fullName}" ${res.isActive ? 'activado' : 'inactivado'} correctamente.`
       );
       fetchExtrasList();
+      onSaveSuccess();
     } catch (err) {
       console.error('Error toggling extra member status:', err);
       toast.error('No se pudo cambiar el estado del miembro extra.');
@@ -546,6 +551,7 @@ export const FamilyGroupDrawer: React.FC<FamilyGroupDrawerProps> = ({
       setIsConfirmExtraOpen(false);
       setExtraToDelete(null);
       fetchExtrasList();
+      onSaveSuccess();
     } catch (err) {
       console.error('Error deleting extra member:', err);
       toast.error('No se pudo eliminar al miembro extra.');
