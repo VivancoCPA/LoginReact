@@ -49,8 +49,8 @@ auto_commit:
     enabled: false
     message: "[Spec Kit] Add tasks"
   after_implement:
-    enabled: false
-    message: "[Spec Kit] Implementation progress"
+    enabled: true
+    message: "[Spec Kit] Implement family group extra member type refactoring and system members edit action"
   after_checklist:
     enabled: false
     message: "[Spec Kit] Add checklist"
