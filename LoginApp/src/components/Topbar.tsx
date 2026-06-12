@@ -16,7 +16,7 @@ export const Topbar: React.FC<TopbarProps> = ({
   theme,
   onToggleTheme,
 }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, activeRole } = useAuth();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -106,7 +106,7 @@ export const Topbar: React.FC<TopbarProps> = ({
                 {user.name} {user.lastName}
               </span>
               <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mt-1.5 leading-none">
-                {user.roles && user.roles.length > 0 ? user.roles[0] : 'Usuario'}
+                {activeRole || 'Usuario'}
               </span>
             </div>
           )}
@@ -138,10 +138,10 @@ export const Topbar: React.FC<TopbarProps> = ({
                 <span className="text-xs text-slate-400 dark:text-slate-400 truncate">
                   {user?.email}
                 </span>
-                {user?.roles && user.roles.length > 0 && (
+                {activeRole && (
                   <div className="mt-2 flex">
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/45 text-indigo-600 dark:text-indigo-400 border border-indigo-100/50 dark:border-indigo-900/30">
-                      {user.roles[0]}
+                      {activeRole}
                     </span>
                   </div>
                 )}

@@ -15,10 +15,11 @@ import CenterTypeMaintenance from './pages/CenterTypeMaintenance';
 import MedicalCenterMaintenance from './pages/MedicalCenterMaintenance';
 import DoctorMaintenance from './pages/DoctorMaintenance';
 import FamilyGroupMaintenance from './pages/FamilyGroupMaintenance';
+import ChooseRole from './pages/ChooseRole';
 
 // Route Guard: Protected paths requiring authentication
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { isAuthenticated, user, isLoading, checkTokenExpiry, logout } = useAuth();
+  const { isAuthenticated, user, isLoading, checkTokenExpiry, logout, activeRole } = useAuth();
   const location = useLocation();
 
   React.useEffect(() => {
@@ -52,6 +53,20 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }
     if (location.pathname === '/force-password-change') {
       return <Navigate to="/dashboard" replace />;
     }
+
+    const roles = user?.roles || [];
+    const hasMultipleRoles = roles.length > 1;
+    const hasZeroRoles = roles.length === 0;
+
+    if (hasZeroRoles || (hasMultipleRoles && !activeRole)) {
+      if (location.pathname !== '/choose-role') {
+        return <Navigate to="/choose-role" replace />;
+      }
+    } else {
+      if (location.pathname === '/choose-role') {
+        return <Navigate to="/dashboard" replace />;
+      }
+    }
   }
 
   return children;
@@ -59,7 +74,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }
 
 // Route Guard: Public paths (like login) that authenticated users should not visit
 const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { isAuthenticated, user, isLoading } = useAuth();
+  const { isAuthenticated, user, isLoading, activeRole } = useAuth();
 
   if (isLoading) {
     return (
@@ -72,6 +87,10 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =
   if (isAuthenticated) {
     if (user?.passwordConfirmed === false) {
       return <Navigate to="/force-password-change" replace />;
+    }
+    const roles = user?.roles || [];
+    if (roles.length === 0 || (roles.length > 1 && !activeRole)) {
+      return <Navigate to="/choose-role" replace />;
     }
     return <Navigate to="/dashboard" replace />;
   }
@@ -151,6 +170,14 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <ForcePasswordChange />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/choose-role"
+            element={
+              <ProtectedRoute>
+                <ChooseRole />
               </ProtectedRoute>
             }
           />

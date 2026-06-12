@@ -28,6 +28,7 @@ interface AuthContextType extends AuthState {
   tempPassword: string | null;
   changeTempPassword: (newPassword: string) => Promise<void>;
   updateUserSession: (updatedUser: Partial<User>) => void;
+  setActiveRole: (role: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,6 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     token: null,
     isAuthenticated: false,
     isLoading: true,
+    activeRole: null,
     error: null,
   });
 
@@ -81,7 +83,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setState((prev) => {
             if (!prev.isAuthenticated) return prev;
             localStorage.setItem('auth_user', JSON.stringify(updatedUser));
-            return { ...prev, user: updatedUser };
+            
+            let active = prev.activeRole;
+            if (updatedUser.roles && updatedUser.roles.length === 1) {
+              active = updatedUser.roles[0];
+              localStorage.setItem('auth_active_role', active);
+            }
+            
+            return { ...prev, user: updatedUser, activeRole: active };
           });
         }
       } catch (err) {
@@ -101,11 +110,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             logoutClean();
           } else {
             const user = JSON.parse(userJson) as User;
+            let active = localStorage.getItem('auth_active_role');
+            
+            if (user.roles && user.roles.length === 1) {
+              active = user.roles[0];
+              localStorage.setItem('auth_active_role', active);
+            }
+
             setState({
               user,
               token,
               isAuthenticated: true,
               isLoading: false,
+              activeRole: active,
               error: null,
             });
             // Fetch fresh profile details asynchronously in the background
@@ -149,12 +166,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('auth_refresh_token');
     localStorage.removeItem('auth_user');
     localStorage.removeItem('auth_timestamp');
+    localStorage.removeItem('auth_active_role');
     setTempPassword(null); // Clear transient memory
     setState({
       user: null,
       token: null,
       isAuthenticated: false,
       isLoading: false,
+      activeRole: null,
       error: null,
     });
   };
@@ -211,11 +230,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('auth_user', JSON.stringify(user));
       localStorage.setItem('auth_timestamp', Date.now().toString());
 
+      let active: string | null = null;
+      if (user.roles && user.roles.length === 1) {
+        active = user.roles[0];
+        localStorage.setItem('auth_active_role', active);
+      } else {
+        localStorage.removeItem('auth_active_role');
+      }
+
       setState({
         user,
         token: data.token,
         isAuthenticated: true,
         isLoading: false,
+        activeRole: active,
         error: null,
       });
 
@@ -292,8 +320,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   };
 
+  const setActiveRole = (role: string | null) => {
+    if (role) {
+      localStorage.setItem('auth_active_role', role);
+    } else {
+      localStorage.removeItem('auth_active_role');
+    }
+    setState((prev) => ({ ...prev, activeRole: role }));
+  };
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, checkTokenExpiry, tempPassword, changeTempPassword, updateUserSession }}>
+    <AuthContext.Provider value={{ ...state, login, logout, checkTokenExpiry, tempPassword, changeTempPassword, updateUserSession, setActiveRole }}>
       {children}
     </AuthContext.Provider>
   );

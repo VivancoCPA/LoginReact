@@ -19,16 +19,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { activeRole } = useAuth();
   
-  // Filter menuConfig by user roles dynamically
+  // Filter menuConfig by active role dynamically
   const filteredMenuConfig = React.useMemo(() => {
     const filterMenuItems = (items: NavigationItem[]): NavigationItem[] => {
       return items
         .filter((item) => {
           if (!item.roles) return true;
-          if (!user || !user.roles) return false;
-          return item.roles.some((role) => user.roles?.includes(role));
+          if (!activeRole) return false;
+          return item.roles.includes(activeRole);
         })
         .map((item) => {
           if (item.children) {
@@ -42,7 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         .filter((item) => !item.children || item.children.length > 0);
     };
     return filterMenuItems(menuConfig);
-  }, [user]);
+  }, [activeRole]);
 
   // Track expanded state of sections (submenus) by their label
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
