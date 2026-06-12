@@ -2,6 +2,24 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User, AuthResponse, AuthState } from '../types/auth';
 import { authService } from '../services/authService';
+import { apiClient } from '../services/apiClient';
+
+const parseJwt = (token: string): any => {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+};
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<AuthResponse>;
@@ -43,6 +61,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Perform initial session restoration from localStorage
   useEffect(() => {
+    const fetchFreshProfile = async (currentUser: User, currentToken: string) => {
+      try {
+        const claims = parseJwt(currentToken);
+        const userId = claims?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] || claims?.sub;
+        if (userId) {
+          const response = await apiClient.get(`/users/${userId}`, {
+            headers: { Authorization: `Bearer ${currentToken}` }
+          });
+          const freshUser = response.data;
+          const updatedUser: User = {
+            ...currentUser,
+            id: freshUser.id,
+            name: freshUser.name || currentUser.name,
+            lastName: freshUser.lastName || currentUser.lastName,
+            photoUrl: freshUser.photoUrl || '',
+            roles: freshUser.roles || [],
+          };
+          setState((prev) => {
+            if (!prev.isAuthenticated) return prev;
+            localStorage.setItem('auth_user', JSON.stringify(updatedUser));
+            return { ...prev, user: updatedUser };
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch fresh user profile in background:", err);
+      }
+    };
+
     const initializeAuth = () => {
       try {
         const token = localStorage.getItem('auth_token');
@@ -62,6 +108,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               isLoading: false,
               error: null,
             });
+            // Fetch fresh profile details asynchronously in the background
+            fetchFreshProfile(user, token);
           }
         } else {
           setState((prev) => ({ ...prev, isLoading: false }));
@@ -126,11 +174,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const data = await authService.login(email, password);
       
+      const claims = parseJwt(data.token);
+      const userId = claims?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] || claims?.sub;
+      let freshRoles: string[] = [];
+      let photoUrl = "";
+      
+      if (userId) {
+        try {
+          const response = await apiClient.get(`/users/${userId}`, {
+            headers: { Authorization: `Bearer ${data.token}` }
+          });
+          freshRoles = response.data.roles || [];
+          photoUrl = response.data.photoUrl || "";
+        } catch (err) {
+          console.error("Failed to fetch user profile details on login:", err);
+        }
+      }
+
       const user: User = {
+        id: userId,
         email: data.email,
         name: data.name,
         lastName: data.lastName,
         passwordConfirmed: data.passwordConfirmed !== false,
+        photoUrl,
+        roles: freshRoles,
       };
 
       if (data.passwordConfirmed === false) {

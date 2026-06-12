@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { menuConfig } from '../navigation/menuConfig';
 import type { NavigationItem } from '../types/navigation';
+import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -18,19 +19,43 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   
+  // Filter menuConfig by user roles dynamically
+  const filteredMenuConfig = React.useMemo(() => {
+    const filterMenuItems = (items: NavigationItem[]): NavigationItem[] => {
+      return items
+        .filter((item) => {
+          if (!item.roles) return true;
+          if (!user || !user.roles) return false;
+          return item.roles.some((role) => user.roles?.includes(role));
+        })
+        .map((item) => {
+          if (item.children) {
+            return {
+              ...item,
+              children: filterMenuItems(item.children),
+            };
+          }
+          return item;
+        })
+        .filter((item) => !item.children || item.children.length > 0);
+    };
+    return filterMenuItems(menuConfig);
+  }, [user]);
+
   // Track expanded state of sections (submenus) by their label
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
   // Auto-expand parent submenus if a child route is currently active
   useEffect(() => {
-    const activeParent = menuConfig.find((item) => 
+    const activeParent = filteredMenuConfig.find((item) => 
       item.children?.some((child) => child.path === location.pathname)
     );
     if (activeParent) {
       setExpandedMenus((prev) => ({ ...prev, [activeParent.label]: true }));
     }
-  }, [location.pathname]);
+  }, [location.pathname, filteredMenuConfig]);
 
   const handleMenuClick = (item: NavigationItem) => {
     if (item.children) {
@@ -92,7 +117,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* NAVIGATION LINKS LIST */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-1.5 select-none custom-scrollbar">
-        {menuConfig.map((item) => {
+        {filteredMenuConfig.map((item) => {
           const active = isItemActive(item);
           const expanded = expandedMenus[item.label];
           

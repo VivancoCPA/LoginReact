@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import FormInput from './FormInput';
 import { toast } from 'react-hot-toast';
+import { getPhotoFullUrl } from '../utils/photo';
 
 interface ProfileDrawerProps {
   isOpen: boolean;
@@ -18,7 +19,10 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose })
   const [phone, setPhone] = useState('');
   const [dob, setDob] = useState('');
   const [address, setAddress] = useState('');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string>('');
   
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [nameError, setNameError] = useState<string | null>(null);
   const [lastNameError, setLastNameError] = useState<string | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
@@ -35,6 +39,7 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose })
           setName(profile.name || user.name || '');
           setLastName(profile.lastName || user.lastName || '');
           setPhone(profile.phoneNumber || '');
+          setPhotoUrl(profile.photoUrl || user.photoUrl || '');
           
           // Format date for HTML input (YYYY-MM-DD)
           if (profile.dateOfBirth) {
@@ -61,6 +66,45 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose })
       fetchProfile();
     }
   }, [isOpen, user]);
+
+  const getInitials = () => {
+    const n = name?.trim().charAt(0) || "";
+    const l = lastName?.trim().charAt(0) || "";
+    return `${n}${l}`.toUpperCase() || "U";
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (<= 2MB)
+    const maxSize = 2 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("El tamaño de la foto no debe exceder los 2MB.");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+
+    // Validate image format (JPG/PNG)
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Formatos permitidos: JPG, PNG.");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+
+    setPhotoFile(file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -90,16 +134,13 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose })
 
     setIsSaving(true);
     try {
-      // API payload expects ISO datetime or simple date
-      const dobIso = dob ? new Date(dob).toISOString() : undefined;
-      
-      await authService.updateUser(
+      const response = await authService.updateUser(
         userId,
         name.trim(),
         lastName.trim(),
-        dobIso,
+        dob || undefined, // yyyy-MM-dd format expected by API
         phone.trim(),
-        undefined, // photoUrl
+        photoFile, // photo binary file for upload
         address.trim()
       );
 
@@ -107,6 +148,7 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose })
       updateUserSession({
         name: name.trim(),
         lastName: lastName.trim(),
+        photoUrl: response.photoUrl || '',
       });
 
       toast.success('¡Perfil actualizado con éxito!');
@@ -154,6 +196,67 @@ export const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose })
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
+                
+                {/* Avatar section */}
+                <div className="flex flex-col items-center justify-center py-2">
+                  <div className="relative group">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/png, image/jpeg, image/jpg"
+                      onChange={handleFileChange}
+                      disabled={isSaving}
+                    />
+
+                    <div
+                      onClick={() => !isSaving && fileInputRef.current?.click()}
+                      className={`relative w-28 h-28 rounded-full border-4 border-white dark:border-slate-800 shadow-xl overflow-hidden flex items-center justify-center select-none transition-all duration-300 cursor-pointer hover:brightness-90 hover:scale-105 active:scale-95 group
+                        ${photoUrl ? "" : "bg-gradient-to-tr from-indigo-500 to-violet-600 text-white"}`}
+                    >
+                      {photoUrl ? (
+                        <img
+                          src={getPhotoFullUrl(photoUrl)}
+                          alt="Avatar"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-3xl font-extrabold tracking-wider">
+                          {getInitials()}
+                        </span>
+                      )}
+
+                      {/* Image upload hover mask */}
+                      <div className="absolute inset-0 bg-black/40 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={2}
+                          stroke="currentColor"
+                          className="w-5 h-5 mb-1 animate-pulse"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"
+                          />
+                        </svg>
+                        <span className="text-[10px] font-semibold uppercase tracking-wider">
+                          Subir Foto
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-2">
+                    JPG o PNG, máx. 2MB
+                  </span>
+                </div>
                 
                 <FormInput
                   label="Correo Electrónico (Solo Lectura)"

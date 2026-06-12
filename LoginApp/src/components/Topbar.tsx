@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getPhotoFullUrl } from '../utils/photo';
 
 interface TopbarProps {
   onToggleSidebar: () => void;
@@ -98,26 +99,53 @@ export const Topbar: React.FC<TopbarProps> = ({
         </button>
 
         {/* User initials Avatar with dropdown menu */}
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center justify-center h-9 w-9 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm border-2 border-slate-200/20 shadow-md transition-colors cursor-pointer focus:outline-none"
-          >
-            {getInitials()}
-          </button>
-
-          {/* User dropdown list menu */}
-          <div className={`absolute right-0 mt-2 w-64 origin-top-right rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xl ring-1 ring-black/5 focus:outline-none transition-all duration-200 transform ${isDropdownOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}>
-            
-            {/* User name & email header */}
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-col text-left">
-              <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
-                {user?.name} {user?.lastName}
+        <div className="flex items-center gap-3" ref={dropdownRef}>
+          {user && (
+            <div className="hidden md:flex flex-col text-right">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 leading-none">
+                {user.name} {user.lastName}
               </span>
-              <span className="text-xs text-slate-400 dark:text-slate-400 truncate">
-                {user?.email}
+              <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mt-1.5 leading-none">
+                {user.roles && user.roles.length > 0 ? user.roles[0] : 'Usuario'}
               </span>
             </div>
+          )}
+
+          <div className="relative">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center justify-center h-9 w-9 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm border-2 border-slate-200/20 shadow-md transition-colors cursor-pointer focus:outline-none overflow-hidden"
+            >
+              {user?.photoUrl ? (
+                <img
+                  src={getPhotoFullUrl(user.photoUrl)}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                getInitials()
+              )}
+            </button>
+
+            {/* User dropdown list menu */}
+            <div className={`absolute right-0 mt-2 w-64 origin-top-right rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xl ring-1 ring-black/5 focus:outline-none transition-all duration-200 transform ${isDropdownOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}>
+              
+              {/* User name & email header */}
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-col text-left">
+                <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+                  {user?.name} {user?.lastName}
+                </span>
+                <span className="text-xs text-slate-400 dark:text-slate-400 truncate">
+                  {user?.email}
+                </span>
+                {user?.roles && user.roles.length > 0 && (
+                  <div className="mt-2 flex">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/45 text-indigo-600 dark:text-indigo-400 border border-indigo-100/50 dark:border-indigo-900/30">
+                      {user.roles[0]}
+                    </span>
+                  </div>
+                )}
+              </div>
 
             {/* Profile modification / account details buttons */}
             <div className="p-2 space-y-1">
@@ -154,6 +182,8 @@ export const Topbar: React.FC<TopbarProps> = ({
         </div>
 
       </div>
+      
+    </div>
 
     </header>
   );

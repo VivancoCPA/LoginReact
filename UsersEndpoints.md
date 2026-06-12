@@ -39,6 +39,7 @@ Se excluyen explícitamente los endpoints de gestión de roles que no operan sob
   - [Asignar Usuario a un Ámbito (`POST /api/users/{adminId}/scope/{userId}`)](#asignar-usuario-a-un-ámbito-post-apiusersadminidscopeuserid)
   - [Remover Usuario de un Ámbito (`DELETE /api/users/{adminId}/scope/{userId}`)](#remover-usuario-de-un-ámbito-delete-apiusersadminidscopeuserid)
   - [Listar Usuarios en el Ámbito de un Administrador (`GET /api/users/{adminId}/scopes`)](#listar-usuarios-en-el-ámbito-de-un-administrador-get-apiusersadminidscopes)
+  - [Listar Usuarios sin Ámbito Asociado (`GET /api/users/unscoped`)](#listar-usuarios-sin-ámbito-asociado-get-apiusersunscoped)
 
 ---
 
@@ -919,3 +920,30 @@ Devuelve un listado `IEnumerable<ListUserScopesResponse>` de usuarios asociados 
 #### Otras Respuestas
 *   **`401 Unauthorized`**: El usuario no ha proporcionado credenciales de autenticación válidas.
 *   **`403 Forbidden`**: El solicitante no es `SuperAdmin` y trata de consultar el ámbito de otro administrador, o carece de privilegios adecuados.
+
+---
+
+### Listar Usuarios sin Ámbito Asociado (`GET /api/users/unscoped`)
+
+*   **Ruta:** `GET /api/users/unscoped`
+*   **Nombre de Acción:** `ListUnscopedUsers`
+*   **Autorización:** Requerido (`.RequireAuthorization()`). Permitido a los roles `SuperAdmin` y `Admin`.
+*   **Parámetros de Ruta:** Ninguno.
+
+#### Respuesta Exitosa (`200 OK`)
+Devuelve un listado `IEnumerable<ListUnscopedUsersResponse>` de usuarios que no pertenecen a ningún ámbito (no existen registros asociados en la tabla `user_scope`):
+```json
+[
+  {
+    "id": "string",
+    "email": "usuario@example.com",
+    "name": "Nombre",
+    "lastName": "Apellido",
+    "fullName": "Nombre Apellido"
+  }
+]
+```
+
+#### Otras Respuestas
+*   **`401 Unauthorized`**: El usuario no ha proporcionado credenciales de autenticación válidas.
+*   **`403 Forbidden`**: El solicitante no posee el rol `SuperAdmin` o `Admin`.

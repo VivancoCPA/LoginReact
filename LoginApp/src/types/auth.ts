@@ -4,6 +4,8 @@ export interface User {
   name: string;
   lastName?: string;
   passwordConfirmed?: boolean;
+  photoUrl?: string;
+  roles?: string[];
 }
 
 export interface AuthResponse {

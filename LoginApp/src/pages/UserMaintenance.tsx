@@ -6,6 +6,8 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { UserRolesDialog } from "../components/UserRolesDialog";
 import { getPhotoFullUrl } from "../utils/photo";
 import type { PagedUserItem } from "../types/user";
+import { useAuth } from "../context/AuthContext";
+import { UserScopeDrawer } from "../components/UserScopeDrawer";
 
 const getLastAccessText = (lastAccess?: string) => {
   if (!lastAccess) return { dateStr: "—", relativeStr: "Nunca ingresó" };
@@ -41,11 +43,17 @@ const getLastAccessText = (lastAccess?: string) => {
 };
 
 export const UserMaintenance: React.FC = () => {
+  const { user: currentUser } = useAuth();
+  const isStandardAdmin = currentUser?.roles?.includes("Admin") && !currentUser?.roles?.includes("SuperAdmin");
+
   // persitent view mode: table vs cards
   const [viewMode, setViewMode] = useState<"table" | "cards">(() => {
     const saved = sessionStorage.getItem("user_maintenance_view_mode");
     return saved === "cards" ? "cards" : "table";
   });
+
+  // State for scope drawer visibility
+  const [isScopeDrawerOpen, setIsScopeDrawerOpen] = useState(false);
 
   // State for loaded users and pagination details
   const [users, setUsers] = useState<PagedUserItem[]>([]);
@@ -90,10 +98,14 @@ export const UserMaintenance: React.FC = () => {
   );
   const [selectedUser, setSelectedUser] = useState<PagedUserItem | null>(null);
 
-  // Confirm dialog state (lock / unlock toggles)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [userToToggle, setUserToToggle] = useState<PagedUserItem | null>(null);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
+
+  // Scope disassociation state
+  const [isDisassociateConfirmOpen, setIsDisassociateConfirmOpen] = useState(false);
+  const [userToDisassociate, setUserToDisassociate] = useState<PagedUserItem | null>(null);
+  const [isDisassociating, setIsDisassociating] = useState(false);
 
   // Persist view mode choices
   useEffect(() => {
@@ -109,6 +121,17 @@ export const UserMaintenance: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Open scope drawer if openScopeDrawer=true is in the query params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("openScopeDrawer") === "true") {
+      setIsScopeDrawerOpen(true);
+      // Clean up the query parameter from URL so it doesn't reopen on reload
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
 
 
 
@@ -191,6 +214,30 @@ export const UserMaintenance: React.FC = () => {
     }
   };
 
+  // Scope disassociation handlers
+  const handleDisassociateClick = (user: PagedUserItem) => {
+    setUserToDisassociate(user);
+    setIsDisassociateConfirmOpen(true);
+  };
+
+  const handleConfirmDisassociate = async () => {
+    if (!userToDisassociate || !currentUser?.id) return;
+    setIsDisassociating(true);
+    try {
+      await userService.disassociateUserFromScope(currentUser.id, userToDisassociate.id);
+      toast.success("Usuario desasociado de su scope correctamente.");
+      setIsDisassociateConfirmOpen(false);
+      setUserToDisassociate(null);
+      fetchUsers();
+    } catch (error: any) {
+      console.error("Error disassociating user:", error);
+      const msg = error.response?.data?.detail || error.response?.data?.message || "No se pudo desasociar el usuario.";
+      toast.error(msg);
+    } finally {
+      setIsDisassociating(false);
+    }
+  };
+
   // Open drawer actions
   const handleOpenDrawer = (
     mode: "view" | "create" | "edit",
@@ -242,28 +289,54 @@ export const UserMaintenance: React.FC = () => {
           </p>
         </div>
 
-        {/* Create user primary action */}
-        <button
-          type="button"
-          onClick={() => handleOpenDrawer("create", null)}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 dark:bg-indigo-700 dark:hover:bg-indigo-600 shadow-md shadow-indigo-500/15 rounded-xl transition-all duration-200 cursor-pointer focus:outline-none"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2.5}
-            stroke="currentColor"
-            className="w-4 h-4"
+        {/* Actions Container */}
+        <div className="flex items-center gap-3">
+          {isStandardAdmin && (
+            <button
+              type="button"
+              onClick={() => setIsScopeDrawerOpen(true)}
+              className="flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/30 dark:hover:bg-indigo-900/35 border border-indigo-150 dark:border-indigo-900/30 shadow-sm rounded-xl transition-all duration-200 cursor-pointer focus:outline-none"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+                stroke="currentColor"
+                className="w-4 h-4"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"
+                />
+              </svg>
+              Asociar Scope
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => handleOpenDrawer("create", null)}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 dark:bg-indigo-700 dark:hover:bg-indigo-600 shadow-md shadow-indigo-500/15 rounded-xl transition-all duration-200 cursor-pointer focus:outline-none"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 4.5v15m7.5-7.5h-15"
-            />
-          </svg>
-          Nuevo Usuario
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2.5}
+              stroke="currentColor"
+              className="w-4 h-4"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4.5v15m7.5-7.5h-15"
+              />
+            </svg>
+            Nuevo Usuario
+          </button>
+        </div>
       </div>
 
       {/* FILTER AND ACTION BAR */}
@@ -693,6 +766,30 @@ export const UserMaintenance: React.FC = () => {
                           </svg>
                         </button>
 
+                        {isStandardAdmin && user.id !== currentUser?.id && (
+                          <button
+                            type="button"
+                            onClick={() => handleDisassociateClick(user)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:text-slate-500 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
+                            title="Desasociar del Scope"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={2}
+                              stroke="currentColor"
+                              className="w-3.5 h-3.5"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M22 10.5h-6M15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                              />
+                            </svg>
+                          </button>
+                        )}
+
                         <button
                           type="button"
                           onClick={() => handleToggleStatusClick(user)}
@@ -916,6 +1013,33 @@ export const UserMaintenance: React.FC = () => {
                             </svg>
                             Roles
                           </button>
+
+                          {isStandardAdmin && user.id !== currentUser?.id && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveMenuUserId(null);
+                                handleDisassociateClick(user);
+                              }}
+                              className="w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors flex items-center gap-2 cursor-pointer"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                stroke="currentColor"
+                                className="w-3.5 h-3.5 shrink-0"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M22 10.5h-6M15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                                />
+                              </svg>
+                              Desasociar del Scope
+                            </button>
+                          )}
 
                           <div className="my-1 border-t border-slate-100 dark:border-slate-800/80" />
 
@@ -1156,6 +1280,28 @@ export const UserMaintenance: React.FC = () => {
         confirmText={userToToggle?.isLockedOut ? "Reactivar" : "Desactivar"}
         confirmColor={userToToggle?.isLockedOut ? "indigo" : "danger"}
         isLoading={isTogglingStatus}
+      />
+
+      {/* SCOPE ASSOCIATION DRAWER */}
+      <UserScopeDrawer
+        isOpen={isScopeDrawerOpen}
+        onClose={() => setIsScopeDrawerOpen(false)}
+        onSaveSuccess={fetchUsers}
+      />
+
+      {/* DISASSOCIATION CONFIRM MODAL */}
+      <ConfirmDialog
+        isOpen={isDisassociateConfirmOpen}
+        onClose={() => {
+          setIsDisassociateConfirmOpen(false);
+          setUserToDisassociate(null);
+        }}
+        onConfirm={handleConfirmDisassociate}
+        title="Desasociar del Scope"
+        message={`¿Estás seguro de que deseas desasociar al usuario ${userToDisassociate?.name} ${userToDisassociate?.lastName} de su scope de administración?`}
+        confirmText="Desasociar"
+        confirmColor="danger"
+        isLoading={isDisassociating}
       />
     </div>
   );

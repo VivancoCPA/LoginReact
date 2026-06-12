@@ -187,4 +187,48 @@ export const userService = {
     );
     return response.data;
   },
+
+  /**
+   * Retrieves all users (without pagination)
+   */
+  async getAllUsers(): Promise<any[]> {
+    const response = await apiClient.get<any[]>("/users");
+    return response.data;
+  },
+
+  /**
+   * Retrieves users associated with an Admin's scope
+   */
+  async getUserScopes(adminId: string): Promise<Array<{
+    id: number;
+    userIdAdmin: string;
+    userId: string;
+    userEmail: string;
+    userFullName: string;
+  }>> {
+    const response = await apiClient.get<Array<{
+      id: number;
+      userIdAdmin: string;
+      userId: string;
+      userEmail: string;
+      userFullName: string;
+    }>>(`/users/${adminId}/scopes`);
+    return response.data;
+  },
+
+  /**
+   * Associates a user to an Admin's scope
+   */
+  async associateUserToScope(adminId: string, userId: string): Promise<any> {
+    const response = await apiClient.post(`/users/${adminId}/scope/${userId}`);
+    return response.data;
+  },
+
+  /**
+   * Removes a user from an Admin's scope
+   */
+  async disassociateUserFromScope(adminId: string, userId: string): Promise<any> {
+    const response = await apiClient.delete(`/users/${adminId}/scope/${userId}`);
+    return response.data;
+  },
 };

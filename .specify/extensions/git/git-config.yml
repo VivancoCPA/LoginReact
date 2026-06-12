@@ -50,7 +50,7 @@ auto_commit:
     message: "[Spec Kit] Add tasks"
   after_implement:
     enabled: true
-    message: "[Spec Kit] Implement family group extra member type refactoring and system members edit action"
+    message: "[Spec Kit] Implement user scope management and profile photo uploads"
   after_checklist:
     enabled: false
     message: "[Spec Kit] Add checklist"
