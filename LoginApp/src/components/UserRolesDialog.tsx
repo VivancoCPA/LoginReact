@@ -67,11 +67,13 @@ export const UserRolesDialog: React.FC<UserRolesDialogProps> = ({
       const rolesToAdd = selectedRoles.filter((r) => !initialRoles.includes(r));
       const rolesToRemove = initialRoles.filter((r) => !selectedRoles.includes(r));
 
-      // Process assignments
-      await Promise.all([
-        ...rolesToAdd.map((r) => userService.assignUserRole(userId, r)),
-        ...rolesToRemove.map((r) => userService.removeUserRole(userId, r)),
-      ]);
+      // Process assignments sequentially to prevent backend database concurrency stamp conflicts
+      for (const role of rolesToAdd) {
+        await userService.assignUserRole(userId, role);
+      }
+      for (const role of rolesToRemove) {
+        await userService.removeUserRole(userId, role);
+      }
 
       toast.success('Roles de usuario actualizados correctamente.');
       onSaveSuccess();
