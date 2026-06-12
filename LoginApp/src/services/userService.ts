@@ -197,6 +197,14 @@ export const userService = {
   },
 
   /**
+   * Retrieves all users without any associated scope
+   */
+  async getUnscopedUsers(): Promise<any[]> {
+    const response = await apiClient.get<any[]>("/users/unscoped");
+    return response.data;
+  },
+
+  /**
    * Retrieves users associated with an Admin's scope
    */
   async getUserScopes(adminId: string): Promise<Array<{

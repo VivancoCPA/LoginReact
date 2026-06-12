@@ -27,24 +27,15 @@ export const UserScopeDrawer: React.FC<UserScopeDrawerProps> = ({
     if (!adminId) return;
     setIsLoading(true);
     try {
-      // 1. Fetch all users from the system
-      const allUsers = await userService.getAllUsers();
+      // Fetch unscoped users directly from the backend
+      const unscoped = await userService.getUnscopedUsers();
       
-      // 2. Fetch users in this admin's scope
-      const scopedUsers = await userService.getUserScopes(adminId);
-      
-      // 3. Filter: users that are not the current admin and not in this admin's scope
-      const filtered = allUsers.filter((u: any) => {
-        if (u.id === adminId) return false;
-        
-        // Exclude users already associated with the admin's scope
-        const isAlreadyScoped = scopedUsers.some((su: any) => su.userId === u.id);
-        return !isAlreadyScoped;
-      });
+      // Filter out the current admin if they are present in the list
+      const filtered = unscoped.filter((u: any) => u.id !== adminId);
       
       setScopelessUsers(filtered);
     } catch (err: any) {
-      console.error('Error fetching scopeless users:', err);
+      console.error('Error fetching unscoped users:', err);
       toast.error('No se pudieron cargar los usuarios disponibles.');
     } finally {
       setIsLoading(false);

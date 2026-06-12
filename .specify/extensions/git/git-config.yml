@@ -50,7 +50,7 @@ auto_commit:
     message: "[Spec Kit] Add tasks"
   after_implement:
     enabled: true
-    message: "[Spec Kit] Implement user scope management and profile photo uploads"
+    message: "[Spec Kit] Implement unscoped users association and fix empty drawer list"
   after_checklist:
     enabled: false
     message: "[Spec Kit] Add checklist"
