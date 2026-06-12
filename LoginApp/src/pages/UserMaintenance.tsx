@@ -5,7 +5,7 @@ import { UserDrawer } from "../components/UserDrawer";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { UserRolesDialog } from "../components/UserRolesDialog";
 import { getPhotoFullUrl } from "../utils/photo";
-import type { PagedUserItem, FamilyGroup } from "../types/user";
+import type { PagedUserItem } from "../types/user";
 
 const getLastAccessText = (lastAccess?: string) => {
   if (!lastAccess) return { dateStr: "—", relativeStr: "Nunca ingresó" };
@@ -63,10 +63,7 @@ export const UserMaintenance: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  // Active Family Groups
-  const [familyGroups, setFamilyGroups] = useState<FamilyGroup[]>([]);
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
-  const [isGroupFilterOpen, setIsGroupFilterOpen] = useState(false);
+
 
   // Status Filter
   const [statusFilter, setStatusFilter] = useState<
@@ -113,31 +110,34 @@ export const UserMaintenance: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch Family Groups on mount
-  useEffect(() => {
-    const loadGroups = async () => {
-      try {
-        const data = await userService.getFamilyGroups();
-        // Solo traer los grupos activos
-        const activeGroups = data.filter((g) => g.isActive === true);
-        setFamilyGroups(activeGroups);
-      } catch (error) {
-        console.error("Error fetching family groups:", error);
-      }
-    };
-    loadGroups();
-  }, []);
+
 
   // Fetch Paged users
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
+      const activeParam =
+        statusFilter === "active"
+          ? true
+          : statusFilter === "inactive"
+            ? false
+            : null;
+
+      const lockedOutParam =
+        confirmFilter === "confirmed"
+          ? false
+          : confirmFilter === "pending"
+            ? true
+            : null;
+
       const data = await userService.getPagedUsers({
         page,
         pageSize,
         search: debouncedSearch,
         sortBy,
         sortDesc,
+        isActive: activeParam,
+        isLockedOut: lockedOutParam,
       });
       setUsers(data.items || []);
       setTotalCount(data.totalCount || 0);
@@ -148,7 +148,7 @@ export const UserMaintenance: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [page, pageSize, debouncedSearch, sortBy, sortDesc]);
+  }, [page, pageSize, debouncedSearch, sortBy, sortDesc, statusFilter, confirmFilter]);
 
   // Re-fetch users when pagination or sort params change
   useEffect(() => {
@@ -202,24 +202,7 @@ export const UserMaintenance: React.FC = () => {
   };
 
   // Client-side cumulative filter application
-  const filteredUsers = users.filter((u) => {
-    // 1. Status Check
-    if (statusFilter === "active" && u.isLockedOut) return false;
-    if (statusFilter === "inactive" && !u.isLockedOut) return false;
-
-    // 2. Family Group Check
-    if (selectedGroups.length > 0) {
-      if (!u.familyGroupId || !selectedGroups.includes(u.familyGroupId)) {
-        return false;
-      }
-    }
-
-    // 3. Password Confirmation Check
-    if (confirmFilter === "confirmed" && !u.passwordConfirmed) return false;
-    if (confirmFilter === "pending" && u.passwordConfirmed) return false;
-
-    return true;
-  });
+  const filteredUsers = users;
 
   // Initials generator helper
   const getInitials = (name?: string, lastName?: string) => {
@@ -313,90 +296,16 @@ export const UserMaintenance: React.FC = () => {
             />
           </div>
 
-          {/* Family Group Multi-select filter */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsGroupFilterOpen((prev) => !prev)}
-              className={`flex items-center gap-2 px-4 py-2 border rounded-xl text-sm transition-colors cursor-pointer focus:outline-none
-                ${
-                  selectedGroups.length > 0
-                    ? "border-indigo-500 bg-indigo-50/50 text-indigo-700 dark:border-indigo-500/80 dark:bg-indigo-600/10 dark:text-indigo-400 font-semibold"
-                    : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/40"
-                }`}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-4 h-4"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"
-                />
-              </svg>
-              <span>Grupos Familiares</span>
-              {selectedGroups.length > 0 && (
-                <span className="flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">
-                  {selectedGroups.length}
-                </span>
-              )}
-            </button>
-
-            {isGroupFilterOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setIsGroupFilterOpen(false)}
-                />
-                <div className="absolute left-0 mt-2 w-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-xl z-20 max-h-60 overflow-y-auto custom-scrollbar">
-                  <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 select-none">
-                    Filtrar por grupo familiar
-                  </div>
-                  {familyGroups.map((g) => {
-                    const isChecked = selectedGroups.includes(g.id);
-                    return (
-                      <label
-                        key={g.id}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800/40 text-slate-700 dark:text-slate-200 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => {
-                            setSelectedGroups((prev) =>
-                              isChecked
-                                ? prev.filter((id) => id !== g.id)
-                                : [...prev, g.id],
-                            );
-                          }}
-                          className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500/50 h-3.5 w-3.5"
-                        />
-                        <span className="truncate">{g.name}</span>
-                      </label>
-                    );
-                  })}
-                  {familyGroups.length === 0 && (
-                    <div className="px-2 py-3 text-xs text-slate-400 text-center select-none">
-                      Ningún grupo activo encontrado.
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-
           {/* Status filters toggler */}
           <div className="flex bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-1 rounded-xl">
             {(["all", "active", "inactive"] as const).map((filter) => (
               <button
                 key={filter}
                 type="button"
-                onClick={() => setStatusFilter(filter)}
+                onClick={() => {
+                  setStatusFilter(filter);
+                  setPage(1);
+                }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer focus:outline-none
                   ${
                     statusFilter === filter
@@ -419,7 +328,10 @@ export const UserMaintenance: React.FC = () => {
               <button
                 key={filter}
                 type="button"
-                onClick={() => setConfirmFilter(filter)}
+                onClick={() => {
+                  setConfirmFilter(filter);
+                  setPage(1);
+                }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer focus:outline-none
                   ${
                     confirmFilter === filter
