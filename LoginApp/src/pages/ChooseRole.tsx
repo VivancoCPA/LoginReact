@@ -53,11 +53,12 @@ export const ChooseRole: React.FC = () => {
     }
   };
 
-  const getRoleDisplayData = (role: string) => {
-    return ROLE_METADATA[role] || {
-      title: role,
-      desc: 'Acceso al módulo y sus respectivas funciones asignadas.',
-      icon: '⚙️',
+  const getRoleDisplayData = (role: string, apiDesc?: string) => {
+    const local = ROLE_METADATA[role];
+    return {
+      title: local?.title || role,
+      desc: apiDesc || local?.desc || 'Acceso al módulo y sus respectivas funciones asignadas.',
+      icon: local?.icon || '⚙️',
     };
   };
 
@@ -152,14 +153,14 @@ export const ChooseRole: React.FC = () => {
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600 dark:border-indigo-500"></div>
                   </div>
                 )}
-                {roles.map((role) => {
-                  const { title, desc, icon } = getRoleDisplayData(role);
+                 {roles.map((roleObj) => {
+                  const { title, desc, icon } = getRoleDisplayData(roleObj.name, roleObj.description);
                   return (
                     <button
-                      key={role}
+                      key={roleObj.name}
                       type="button"
                       disabled={isSelecting}
-                      onClick={() => handleSelectRole(role)}
+                      onClick={() => handleSelectRole(roleObj.name)}
                       className="w-full flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:shadow-md transition-all duration-200 text-left cursor-pointer group disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       <span className="text-2xl mt-0.5 select-none shrink-0">{icon}</span>

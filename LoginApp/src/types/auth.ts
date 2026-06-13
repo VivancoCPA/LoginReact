@@ -1,3 +1,8 @@
+export interface UserRole {
+  name: string;
+  description: string;
+}
+
 export interface User {
   id?: string;
   email: string;
@@ -5,7 +10,7 @@ export interface User {
   lastName?: string;
   passwordConfirmed?: boolean;
   photoUrl?: string;
-  roles?: string[];
+  roles?: UserRole[];
 }
 
 export interface AuthResponse {
@@ -15,6 +20,7 @@ export interface AuthResponse {
   name: string;
   lastName: string;
   passwordConfirmed?: boolean;
+  roles?: UserRole[];
 }
 
 export interface AuthState {

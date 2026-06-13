@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { User, AuthResponse, AuthState } from '../types/auth';
+import type { User, AuthResponse, AuthState, UserRole } from '../types/auth';
 import { authService } from '../services/authService';
 import { apiClient } from '../services/apiClient';
 
@@ -73,13 +73,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             headers: { Authorization: `Bearer ${currentToken}` }
           });
           const freshUser = response.data;
+          const mappedRoles = (freshUser.roles || []).map((r: string) => {
+            const existing = currentUser.roles?.find((er) => er.name === r);
+            return {
+              name: r,
+              description: existing?.description || 'Acceso al módulo y sus respectivas funciones asignadas.',
+            };
+          });
+
           const updatedUser: User = {
             ...currentUser,
             id: freshUser.id,
             name: freshUser.name || currentUser.name,
             lastName: freshUser.lastName || currentUser.lastName,
             photoUrl: freshUser.photoUrl || '',
-            roles: freshUser.roles || [],
+            roles: mappedRoles,
           };
           setState((prev) => {
             if (!prev.isAuthenticated) return prev;
@@ -87,7 +95,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             
             let active = prev.activeRole;
             if (updatedUser.roles && updatedUser.roles.length === 1) {
-              active = updatedUser.roles[0];
+              active = updatedUser.roles[0].name;
               localStorage.setItem('auth_active_role', active);
             }
             
@@ -114,7 +122,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             let active = localStorage.getItem('auth_active_role');
             
             if (user.roles && user.roles.length === 1) {
-              active = user.roles[0];
+              active = user.roles[0].name;
               localStorage.setItem('auth_active_role', active);
             }
 
@@ -196,7 +204,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       const claims = parseJwt(data.token);
       const userId = claims?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] || claims?.sub;
-      let freshRoles: string[] = [];
+      let freshRoles: UserRole[] = data.roles || [];
       let photoUrl = "";
       
       if (userId) {
@@ -204,7 +212,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const response = await apiClient.get(`/users/${userId}`, {
             headers: { Authorization: `Bearer ${data.token}` }
           });
-          freshRoles = response.data.roles || [];
+          const apiRoles: string[] = response.data.roles || [];
+          if (apiRoles.length > 0) {
+            freshRoles = apiRoles.map((r) => {
+              const matched = (data.roles || []).find((dr) => dr.name === r);
+              return {
+                name: r,
+                description: matched?.description || 'Acceso al módulo y sus respectivas funciones asignadas.'
+              };
+            });
+          }
           photoUrl = response.data.photoUrl || "";
         } catch (err) {
           console.error("Failed to fetch user profile details on login:", err);
@@ -233,7 +250,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       let active: string | null = null;
       if (user.roles && user.roles.length === 1) {
-        active = user.roles[0];
+        active = user.roles[0].name;
         localStorage.setItem('auth_active_role', active);
       } else {
         localStorage.removeItem('auth_active_role');

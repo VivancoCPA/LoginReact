@@ -44,7 +44,7 @@ const getLastAccessText = (lastAccess?: string) => {
 
 export const UserMaintenance: React.FC = () => {
   const { user: currentUser } = useAuth();
-  const isStandardAdmin = currentUser?.roles?.includes("Admin") && !currentUser?.roles?.includes("SuperAdmin");
+  const isStandardAdmin = currentUser?.roles?.some((r) => r.name === "Admin") && !currentUser?.roles?.some((r) => r.name === "SuperAdmin");
 
   // persitent view mode: table vs cards
   const [viewMode, setViewMode] = useState<"table" | "cards">(() => {

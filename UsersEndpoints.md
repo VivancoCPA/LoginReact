@@ -720,7 +720,17 @@ Retorna `LoginResponse` incluyendo el JWT generado y el Refresh Token persistido
   "email": "juan.perez@example.com",
   "name": "Juan",
   "lastName": "Pérez",
-  "passwordConfirmed": true
+  "passwordConfirmed": true,
+  "roles": [
+    {
+      "name": "Admin",
+      "description": "Administrador con acceso completo"
+    },
+    {
+      "name": "User",
+      "description": "Usuario estándar de la aplicación"
+    }
+  ]
 }
 ```
 
