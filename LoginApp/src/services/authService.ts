@@ -129,5 +129,15 @@ export const authService = {
     });
     return response.data;
   },
+
+  /**
+   * Switches the active session role and retrieves a single-role scoped JWT token
+   */
+  async switchRole(roleName: string): Promise<{ token: string }> {
+    const response = await apiClient.post<{ token: string }>('/auth/switch-role', {
+      roleName,
+    });
+    return response.data;
+  },
 };
 

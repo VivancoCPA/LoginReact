@@ -34,13 +34,23 @@ const ROLE_METADATA: Record<string, { title: string; desc: string; icon: string 
 
 export const ChooseRole: React.FC = () => {
   const navigate = useNavigate();
-  const { user, setActiveRole, logout } = useAuth();
+  const { user, switchActiveRole, logout } = useAuth();
   const roles = user?.roles || [];
+  const [isSelecting, setIsSelecting] = React.useState(false);
 
-  const handleSelectRole = (role: string) => {
-    setActiveRole(role);
-    toast.success(`Rol "${ROLE_METADATA[role]?.title || role}" seleccionado correctamente.`);
-    navigate('/dashboard');
+  const handleSelectRole = async (role: string) => {
+    if (isSelecting) return;
+    setIsSelecting(true);
+    try {
+      await switchActiveRole(role);
+      toast.success(`Rol "${ROLE_METADATA[role]?.title || role}" seleccionado correctamente.`);
+      navigate('/dashboard');
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'No se pudo cambiar al rol seleccionado.');
+    } finally {
+      setIsSelecting(false);
+    }
   };
 
   const getRoleDisplayData = (role: string) => {
@@ -136,15 +146,21 @@ export const ChooseRole: React.FC = () => {
           ) : (
             /* LIST ROLES */
             <div className="space-y-4 text-left">
-              <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1.5 custom-scrollbar">
+              <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1.5 custom-scrollbar relative">
+                {isSelecting && (
+                  <div className="absolute inset-0 bg-white/50 dark:bg-slate-950/50 backdrop-blur-[1px] flex items-center justify-center rounded-xl z-20">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600 dark:border-indigo-500"></div>
+                  </div>
+                )}
                 {roles.map((role) => {
                   const { title, desc, icon } = getRoleDisplayData(role);
                   return (
                     <button
                       key={role}
                       type="button"
+                      disabled={isSelecting}
                       onClick={() => handleSelectRole(role)}
-                      className="w-full flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:shadow-md transition-all duration-200 text-left cursor-pointer group"
+                      className="w-full flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:shadow-md transition-all duration-200 text-left cursor-pointer group disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       <span className="text-2xl mt-0.5 select-none shrink-0">{icon}</span>
                       <div className="space-y-0.5">

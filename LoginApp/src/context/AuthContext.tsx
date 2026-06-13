@@ -29,6 +29,7 @@ interface AuthContextType extends AuthState {
   changeTempPassword: (newPassword: string) => Promise<void>;
   updateUserSession: (updatedUser: Partial<User>) => void;
   setActiveRole: (role: string | null) => void;
+  switchActiveRole: (role: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -329,8 +330,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setState((prev) => ({ ...prev, activeRole: role }));
   };
 
+  const switchActiveRole = async (role: string) => {
+    setState((prev) => ({ ...prev, isLoading: true }));
+    try {
+      const data = await authService.switchRole(role);
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('auth_active_role', role);
+      localStorage.setItem('auth_timestamp', Date.now().toString());
+      setState((prev) => ({
+        ...prev,
+        token: data.token,
+        activeRole: role,
+        isLoading: false,
+      }));
+    } catch (err: any) {
+      setState((prev) => ({ ...prev, isLoading: false }));
+      throw err;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, checkTokenExpiry, tempPassword, changeTempPassword, updateUserSession, setActiveRole }}>
+    <AuthContext.Provider value={{ ...state, login, logout, checkTokenExpiry, tempPassword, changeTempPassword, updateUserSession, setActiveRole, switchActiveRole }}>
       {children}
     </AuthContext.Provider>
   );
