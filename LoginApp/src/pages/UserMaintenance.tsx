@@ -43,8 +43,8 @@ const getLastAccessText = (lastAccess?: string) => {
 };
 
 export const UserMaintenance: React.FC = () => {
-  const { user: currentUser } = useAuth();
-  const isStandardAdmin = currentUser?.roles?.some((r) => r.name === "Admin") && !currentUser?.roles?.some((r) => r.name === "SuperAdmin");
+  const { user: currentUser, activeRole } = useAuth();
+  const isStandardAdmin = activeRole === "Admin";
 
   // persitent view mode: table vs cards
   const [viewMode, setViewMode] = useState<"table" | "cards">(() => {
@@ -70,8 +70,6 @@ export const UserMaintenance: React.FC = () => {
   // Search input state (with debouncing)
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-
-
 
   // Status Filter
   const [statusFilter, setStatusFilter] = useState<
@@ -103,8 +101,10 @@ export const UserMaintenance: React.FC = () => {
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
 
   // Scope disassociation state
-  const [isDisassociateConfirmOpen, setIsDisassociateConfirmOpen] = useState(false);
-  const [userToDisassociate, setUserToDisassociate] = useState<PagedUserItem | null>(null);
+  const [isDisassociateConfirmOpen, setIsDisassociateConfirmOpen] =
+    useState(false);
+  const [userToDisassociate, setUserToDisassociate] =
+    useState<PagedUserItem | null>(null);
   const [isDisassociating, setIsDisassociating] = useState(false);
 
   // Persist view mode choices
@@ -132,8 +132,6 @@ export const UserMaintenance: React.FC = () => {
       window.history.replaceState({}, document.title, newUrl);
     }
   }, []);
-
-
 
   // Fetch Paged users
   const fetchUsers = useCallback(async () => {
@@ -171,7 +169,15 @@ export const UserMaintenance: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [page, pageSize, debouncedSearch, sortBy, sortDesc, statusFilter, confirmFilter]);
+  }, [
+    page,
+    pageSize,
+    debouncedSearch,
+    sortBy,
+    sortDesc,
+    statusFilter,
+    confirmFilter,
+  ]);
 
   // Re-fetch users when pagination or sort params change
   useEffect(() => {
@@ -224,14 +230,20 @@ export const UserMaintenance: React.FC = () => {
     if (!userToDisassociate || !currentUser?.id) return;
     setIsDisassociating(true);
     try {
-      await userService.disassociateUserFromScope(currentUser.id, userToDisassociate.id);
+      await userService.disassociateUserFromScope(
+        currentUser.id,
+        userToDisassociate.id,
+      );
       toast.success("Usuario desasociado de su scope correctamente.");
       setIsDisassociateConfirmOpen(false);
       setUserToDisassociate(null);
       fetchUsers();
     } catch (error: any) {
       console.error("Error disassociating user:", error);
-      const msg = error.response?.data?.detail || error.response?.data?.message || "No se pudo desasociar el usuario.";
+      const msg =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        "No se pudo desasociar el usuario.";
       toast.error(msg);
     } finally {
       setIsDisassociating(false);
@@ -291,7 +303,7 @@ export const UserMaintenance: React.FC = () => {
 
         {/* Actions Container */}
         <div className="flex items-center gap-3">
-          {isStandardAdmin && (
+          {isStandardAdmin && ( // Only show scope association button to standard admins, not superadmins
             <button
               type="button"
               onClick={() => setIsScopeDrawerOpen(true)}
@@ -483,462 +495,223 @@ export const UserMaintenance: React.FC = () => {
       {/* RENDER USER LISTINGS */}
       <div className="flex-1 overflow-y-auto min-h-0 pr-1 -mr-1">
         {isLoading ? (
-        // Loading animation skeleton
-        <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm">
-          <div className="space-y-4">
-            <div className="h-6 bg-slate-100 dark:bg-slate-800/60 rounded-lg w-1/3 animate-pulse" />
-            <div className="h-10 bg-slate-50 dark:bg-slate-800/30 rounded-xl w-full animate-pulse" />
-            <div className="h-10 bg-slate-50 dark:bg-slate-800/30 rounded-xl w-full animate-pulse" />
-            <div className="h-10 bg-slate-50 dark:bg-slate-800/30 rounded-xl w-full animate-pulse" />
-            <div className="h-10 bg-slate-50 dark:bg-slate-800/30 rounded-xl w-full animate-pulse" />
+          // Loading animation skeleton
+          <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm">
+            <div className="space-y-4">
+              <div className="h-6 bg-slate-100 dark:bg-slate-800/60 rounded-lg w-1/3 animate-pulse" />
+              <div className="h-10 bg-slate-50 dark:bg-slate-800/30 rounded-xl w-full animate-pulse" />
+              <div className="h-10 bg-slate-50 dark:bg-slate-800/30 rounded-xl w-full animate-pulse" />
+              <div className="h-10 bg-slate-50 dark:bg-slate-800/30 rounded-xl w-full animate-pulse" />
+              <div className="h-10 bg-slate-50 dark:bg-slate-800/30 rounded-xl w-full animate-pulse" />
+            </div>
           </div>
-        </div>
-      ) : filteredUsers.length === 0 ? (
-        // Empty State feedback
-        <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-16 shadow-sm text-center select-none">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 text-slate-400">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
-              />
-            </svg>
+        ) : filteredUsers.length === 0 ? (
+          // Empty State feedback
+          <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-16 shadow-sm text-center select-none">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 text-slate-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                />
+              </svg>
+            </div>
+            <h3 className="mt-4 text-sm font-semibold text-slate-800 dark:text-slate-200">
+              No se encontraron usuarios
+            </h3>
+            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+              Pruebe modificando su criterio de búsqueda o relajando los filtros
+              activos.
+            </p>
           </div>
-          <h3 className="mt-4 text-sm font-semibold text-slate-800 dark:text-slate-200">
-            No se encontraron usuarios
-          </h3>
-          <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-            Pruebe modificando su criterio de búsqueda o relajando los filtros
-            activos.
-          </p>
-        </div>
-      ) : viewMode === "table" ? (
-        // VIEW MODE: ULTRA-COMPACT TABLE LAYOUT
-        <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-slate-950/20 border-b border-slate-200 dark:border-slate-800 text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold select-none">
-                  <th className="px-5 py-3 text-left w-[60px]">Avatar</th>
-                  <th
-                    onClick={() => handleSort("name")}
-                    className="px-5 py-3 text-left cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-1">
-                      <span>Nombre</span>
-                      {sortBy === "name" && (
-                        <svg
-                          className={`w-3.5 h-3.5 transition-transform ${sortDesc ? "transform rotate-180" : ""}`}
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={2.5}
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort("lastname")}
-                    className="px-5 py-3 text-left cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-1">
-                      <span>Apellido</span>
-                      {sortBy === "lastname" && (
-                        <svg
-                          className={`w-3.5 h-3.5 transition-transform ${sortDesc ? "transform rotate-180" : ""}`}
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={2.5}
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                  </th>
-                  <th className="px-5 py-3 text-left">Correo</th>
-                  <th className="px-5 py-3 text-left">Contraseña</th>
-                  <th className="px-5 py-3 text-left">Último Acceso</th>
-                  <th className="px-5 py-3 text-left">Estado</th>
-                  <th className="px-5 py-3 text-right">Acciones</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-slate-150 dark:divide-slate-800/60">
-                {filteredUsers.map((user) => (
-                  <tr
-                    key={user.id}
-                    className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors ${user.isLockedOut ? "bg-slate-50/30 dark:bg-slate-950/10 opacity-60" : ""}`}
-                  >
-                    {/* Spacing constraint strictly respected using py-1.5 or py-2 */}
-                    <td className="px-5 py-1.5 text-left">
-                      <div
-                        className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center overflow-hidden font-bold text-[10px] shadow-sm
-                        ${user.photoUrl ? "" : getAvatarColor(user.id)}`}
-                      >
-                        {user.photoUrl ? (
-                          <img
-                            src={getPhotoFullUrl(user.photoUrl)}
-                            alt="Avatar"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          getInitials(user.name, user.lastName)
+        ) : viewMode === "table" ? (
+          // VIEW MODE: ULTRA-COMPACT TABLE LAYOUT
+          <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-950/20 border-b border-slate-200 dark:border-slate-800 text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold select-none">
+                    <th className="px-5 py-3 text-left w-[60px]">Avatar</th>
+                    <th
+                      onClick={() => handleSort("name")}
+                      className="px-5 py-3 text-left cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>Nombre</span>
+                        {sortBy === "name" && (
+                          <svg
+                            className={`w-3.5 h-3.5 transition-transform ${sortDesc ? "transform rotate-180" : ""}`}
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2.5}
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                            />
+                          </svg>
                         )}
                       </div>
-                    </td>
-                    <td className="px-5 py-1.5 text-left text-xs">
-                      <span className={`font-semibold text-slate-800 dark:text-slate-100 ${user.isLockedOut ? "text-slate-400 dark:text-slate-550 line-through decoration-slate-450/40" : ""}`}>
-                        {user.name}
-                      </span>
-                    </td>
-                    <td className="px-5 py-1.5 text-left text-xs">
-                      <span className={`font-semibold text-slate-800 dark:text-slate-100 ${user.isLockedOut ? "text-slate-400 dark:text-slate-550 line-through decoration-slate-450/40" : ""}`}>
-                        {user.lastName}
-                      </span>
-                    </td>
-                    <td className="px-5 py-1.5 text-left text-xs text-slate-600 dark:text-slate-300 font-mono select-all truncate max-w-xs">
-                      {user.email}
-                    </td>
-                    <td className="px-5 py-1.5 text-left text-xs select-none">
-                      {user.passwordConfirmed ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-105/50 dark:border-emerald-600/20">
+                    </th>
+                    <th
+                      onClick={() => handleSort("lastname")}
+                      className="px-5 py-3 text-left cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>Apellido</span>
+                        {sortBy === "lastname" && (
                           <svg
+                            className={`w-3.5 h-3.5 transition-transform ${sortDesc ? "transform rotate-180" : ""}`}
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
-                            strokeWidth={3}
+                            strokeWidth={2.5}
                             stroke="currentColor"
-                            className="w-2.5 h-2.5"
                           >
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              d="m4.5 12.75 6 6 9-13.5"
+                              d="m19.5 8.25-7.5 7.5-7.5-7.5"
                             />
                           </svg>
-                          Establecida
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-105/50 dark:border-amber-600/20">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={3}
-                            stroke="currentColor"
-                            className="w-2.5 h-2.5"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
-                            />
-                          </svg>
-                          Temporal
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-5 py-1.5 text-left text-xs">
-                      {(() => {
-                        const { dateStr, relativeStr } = getLastAccessText(
-                          user.lastAccess,
-                        );
-                        return (
-                          <div className="flex flex-col gap-0.5 leading-tight select-all">
-                            <span className="text-slate-700 dark:text-slate-350 font-mono text-[11px]">
-                              {dateStr}
-                            </span>
-                            <span className="text-[10px] text-slate-450 dark:text-slate-500 font-medium">
-                              {relativeStr}
-                            </span>
-                          </div>
-                        );
-                      })()}
-                    </td>
-                    <td className="px-5 py-1.5 text-left text-xs select-none">
-                      {user.isLockedOut ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-md bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-600/20">
-                          Bloqueado
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-600/20">
-                          Activado
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Inline Actions */}
-                    <td className="px-5 py-1.5 text-right select-none">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenDrawer("view", user)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
-                          title="Ver Detalles"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                            className="w-3.5 h-3.5"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                            />
-                          </svg>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleOpenDrawer("edit", user)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 dark:text-slate-500 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
-                          title="Editar"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                            className="w-3.5 h-3.5"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
-                            />
-                          </svg>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setRolesUserId(user.id);
-                            setRolesUserEmail(user.email);
-                            setIsRolesOpen(true);
-                          }}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
-                          title="Asociar Roles"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                            className="w-3.5 h-3.5"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
-                            />
-                          </svg>
-                        </button>
-
-                        {isStandardAdmin && user.id !== currentUser?.id && (
-                          <button
-                            type="button"
-                            onClick={() => handleDisassociateClick(user)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:text-slate-500 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
-                            title="Desasociar del Scope"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={2}
-                              stroke="currentColor"
-                              className="w-3.5 h-3.5"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M22 10.5h-6M15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
-                              />
-                            </svg>
-                          </button>
                         )}
-
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStatusClick(user)}
-                          className={`p-1.5 rounded-lg cursor-pointer transition-colors
-                            ${
-                              user.isLockedOut
-                                ? "text-slate-400 hover:text-emerald-500 dark:text-slate-500 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800/60"
-                                : "text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800/60"
-                            }`}
-                          title={user.isLockedOut ? "Reactivar" : "Bloquear"}
-                        >
-                          {!user.isLockedOut ? (
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={2}
-                              stroke="currentColor"
-                              className="w-3.5 h-3.5"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-                              />
-                            </svg>
-                          ) : (
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={2}
-                              stroke="currentColor"
-                              className="w-3.5 h-3.5"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-                              />
-                            </svg>
-                          )}
-                        </button>
                       </div>
-                    </td>
+                    </th>
+                    <th className="px-5 py-3 text-left">Correo</th>
+                    <th className="px-5 py-3 text-left">Contraseña</th>
+                    <th className="px-5 py-3 text-left">Último Acceso</th>
+                    <th className="px-5 py-3 text-left">Estado</th>
+                    <th className="px-5 py-3 text-right">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : (
-        // VIEW MODE: HIGH-FIDELITY RESPONSIVE CARDS GRID VIEW
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredUsers.map((user) => (
-            <div
-              key={user.id}
-              className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-lg dark:hover:border-slate-700/80 transition-all duration-300 group flex flex-col justify-between ${user.isLockedOut ? "bg-slate-50/30 dark:bg-slate-950/10 opacity-60" : ""}`}
-            >
-              <div>
-                {/* Header profile row */}
-                <div className="flex items-start justify-between gap-3 select-none">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden font-extrabold text-xs shadow-sm
-                      ${user.photoUrl ? "" : getAvatarColor(user.id)}`}
+                </thead>
+
+                <tbody className="divide-y divide-slate-150 dark:divide-slate-800/60">
+                  {filteredUsers.map((user) => (
+                    <tr
+                      key={user.id}
+                      className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors ${user.isLockedOut ? "bg-slate-50/30 dark:bg-slate-950/10 opacity-60" : ""}`}
                     >
-                      {user.photoUrl ? (
-                        <img
-                          src={getPhotoFullUrl(user.photoUrl)}
-                          alt="Avatar"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        getInitials(user.name, user.lastName)
-                      )}
-                    </div>
-
-                    <div>
-                      <h3 className={`text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors ${user.isLockedOut ? "text-slate-400 dark:text-slate-500 line-through decoration-slate-450/40" : ""}`}>
-                        {user.name} {user.lastName}
-                      </h3>
-                      <span
-                        className={`inline-flex mt-1 px-1.5 py-0.5 text-[8px] font-bold uppercase rounded border ${
-                          user.passwordConfirmed
-                            ? "bg-emerald-50 dark:bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-600/20"
-                            : "bg-amber-50 dark:bg-amber-600/10 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-600/20"
-                        }`}
-                      >
-                        {user.passwordConfirmed ? "Clave OK" : "Clave Temp"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Vertical Triple-dot (⋮) Dropdown menu */}
-                  <div className="relative shrink-0 flex items-center gap-2">
-                    {/* Status pill */}
-                    {user.isLockedOut ? (
-                      <span
-                        className="h-2 w-2 rounded-full bg-red-500 animate-pulse"
-                        title="Bloqueado"
-                      />
-                    ) : (
-                      <span
-                        className="h-2 w-2 rounded-full bg-emerald-500"
-                        title="Activado"
-                      />
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveMenuUserId((prev) =>
-                          prev === user.id ? null : user.id,
-                        );
-                      }}
-                      className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2.5}
-                        stroke="currentColor"
-                        className="w-4 h-4"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5"
-                        />
-                      </svg>
-                    </button>
-
-                    {activeMenuUserId === user.id && (
-                      <>
+                      {/* Spacing constraint strictly respected using py-1.5 or py-2 */}
+                      <td className="px-5 py-1.5 text-left">
                         <div
-                          className="fixed inset-0 z-10"
-                          onClick={() => setActiveMenuUserId(null)}
-                        />
-                        <div className="absolute right-0 mt-30 w-40 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-xl z-20 animate-fadeIn select-none">
+                          className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center overflow-hidden font-bold text-[10px] shadow-sm
+                        ${user.photoUrl ? "" : getAvatarColor(user.id)}`}
+                        >
+                          {user.photoUrl ? (
+                            <img
+                              src={getPhotoFullUrl(user.photoUrl)}
+                              alt="Avatar"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            getInitials(user.name, user.lastName)
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-1.5 text-left text-xs">
+                        <span
+                          className={`font-semibold text-slate-800 dark:text-slate-100 ${user.isLockedOut ? "text-slate-400 dark:text-slate-550 line-through decoration-slate-450/40" : ""}`}
+                        >
+                          {user.name}
+                        </span>
+                      </td>
+                      <td className="px-5 py-1.5 text-left text-xs">
+                        <span
+                          className={`font-semibold text-slate-800 dark:text-slate-100 ${user.isLockedOut ? "text-slate-400 dark:text-slate-550 line-through decoration-slate-450/40" : ""}`}
+                        >
+                          {user.lastName}
+                        </span>
+                      </td>
+                      <td className="px-5 py-1.5 text-left text-xs text-slate-600 dark:text-slate-300 font-mono select-all truncate max-w-xs">
+                        {user.email}
+                      </td>
+                      <td className="px-5 py-1.5 text-left text-xs select-none">
+                        {user.passwordConfirmed ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-105/50 dark:border-emerald-600/20">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={3}
+                              stroke="currentColor"
+                              className="w-2.5 h-2.5"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="m4.5 12.75 6 6 9-13.5"
+                              />
+                            </svg>
+                            Establecida
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-105/50 dark:border-amber-600/20">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={3}
+                              stroke="currentColor"
+                              className="w-2.5 h-2.5"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                              />
+                            </svg>
+                            Temporal
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-1.5 text-left text-xs">
+                        {(() => {
+                          const { dateStr, relativeStr } = getLastAccessText(
+                            user.lastAccess,
+                          );
+                          return (
+                            <div className="flex flex-col gap-0.5 leading-tight select-all">
+                              <span className="text-slate-700 dark:text-slate-350 font-mono text-[11px]">
+                                {dateStr}
+                              </span>
+                              <span className="text-[10px] text-slate-450 dark:text-slate-500 font-medium">
+                                {relativeStr}
+                              </span>
+                            </div>
+                          );
+                        })()}
+                      </td>
+                      <td className="px-5 py-1.5 text-left text-xs select-none">
+                        {user.isLockedOut ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-md bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-600/20">
+                            Bloqueado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-600/20">
+                            Activado
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Inline Actions */}
+                      <td className="px-5 py-1.5 text-right select-none">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             type="button"
-                            onClick={() => {
-                              setActiveMenuUserId(null);
-                              handleOpenDrawer("view", user);
-                            }}
-                            className="w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-700 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
+                            onClick={() => handleOpenDrawer("view", user)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
+                            title="Ver Detalles"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -946,7 +719,7 @@ export const UserMaintenance: React.FC = () => {
                               viewBox="0 0 24 24"
                               strokeWidth={2}
                               stroke="currentColor"
-                              className="w-3.5 h-3.5 shrink-0"
+                              className="w-3.5 h-3.5"
                             >
                               <path
                                 strokeLinecap="round"
@@ -959,16 +732,13 @@ export const UserMaintenance: React.FC = () => {
                                 d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
                               />
                             </svg>
-                            Ver Detalles
                           </button>
 
                           <button
                             type="button"
-                            onClick={() => {
-                              setActiveMenuUserId(null);
-                              handleOpenDrawer("edit", user);
-                            }}
-                            className="w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-700 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
+                            onClick={() => handleOpenDrawer("edit", user)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 dark:text-slate-500 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
+                            title="Editar"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -976,7 +746,7 @@ export const UserMaintenance: React.FC = () => {
                               viewBox="0 0 24 24"
                               strokeWidth={2}
                               stroke="currentColor"
-                              className="w-3.5 h-3.5 shrink-0"
+                              className="w-3.5 h-3.5"
                             >
                               <path
                                 strokeLinecap="round"
@@ -984,18 +754,17 @@ export const UserMaintenance: React.FC = () => {
                                 d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
                               />
                             </svg>
-                            Editar
                           </button>
 
                           <button
                             type="button"
                             onClick={() => {
-                              setActiveMenuUserId(null);
                               setRolesUserId(user.id);
                               setRolesUserEmail(user.email);
                               setIsRolesOpen(true);
                             }}
-                            className="w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-700 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
+                            title="Asociar Roles"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -1003,7 +772,7 @@ export const UserMaintenance: React.FC = () => {
                               viewBox="0 0 24 24"
                               strokeWidth={2}
                               stroke="currentColor"
-                              className="w-3.5 h-3.5 shrink-0"
+                              className="w-3.5 h-3.5"
                             >
                               <path
                                 strokeLinecap="round"
@@ -1011,17 +780,183 @@ export const UserMaintenance: React.FC = () => {
                                 d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
                               />
                             </svg>
-                            Roles
                           </button>
 
                           {isStandardAdmin && user.id !== currentUser?.id && (
                             <button
                               type="button"
+                              onClick={() => handleDisassociateClick(user)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:text-slate-500 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
+                              title="Desasociar del Scope"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                stroke="currentColor"
+                                className="w-3.5 h-3.5"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M22 10.5h-6M15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                                />
+                              </svg>
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatusClick(user)}
+                            className={`p-1.5 rounded-lg cursor-pointer transition-colors
+                            ${
+                              user.isLockedOut
+                                ? "text-slate-400 hover:text-emerald-500 dark:text-slate-500 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                                : "text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                            }`}
+                            title={user.isLockedOut ? "Reactivar" : "Bloquear"}
+                          >
+                            {!user.isLockedOut ? (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                stroke="currentColor"
+                                className="w-3.5 h-3.5"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+                                />
+                              </svg>
+                            ) : (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                stroke="currentColor"
+                                className="w-3.5 h-3.5"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          // VIEW MODE: HIGH-FIDELITY RESPONSIVE CARDS GRID VIEW
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredUsers.map((user) => (
+              <div
+                key={user.id}
+                className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-lg dark:hover:border-slate-700/80 transition-all duration-300 group flex flex-col justify-between ${user.isLockedOut ? "bg-slate-50/30 dark:bg-slate-950/10 opacity-60" : ""}`}
+              >
+                <div>
+                  {/* Header profile row */}
+                  <div className="flex items-start justify-between gap-3 select-none">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden font-extrabold text-xs shadow-sm
+                      ${user.photoUrl ? "" : getAvatarColor(user.id)}`}
+                      >
+                        {user.photoUrl ? (
+                          <img
+                            src={getPhotoFullUrl(user.photoUrl)}
+                            alt="Avatar"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          getInitials(user.name, user.lastName)
+                        )}
+                      </div>
+
+                      <div>
+                        <h3
+                          className={`text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors ${user.isLockedOut ? "text-slate-400 dark:text-slate-500 line-through decoration-slate-450/40" : ""}`}
+                        >
+                          {user.name} {user.lastName}
+                        </h3>
+                        <span
+                          className={`inline-flex mt-1 px-1.5 py-0.5 text-[8px] font-bold uppercase rounded border ${
+                            user.passwordConfirmed
+                              ? "bg-emerald-50 dark:bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-600/20"
+                              : "bg-amber-50 dark:bg-amber-600/10 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-600/20"
+                          }`}
+                        >
+                          {user.passwordConfirmed ? "Clave OK" : "Clave Temp"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Vertical Triple-dot (⋮) Dropdown menu */}
+                    <div className="relative shrink-0 flex items-center gap-2">
+                      {/* Status pill */}
+                      {user.isLockedOut ? (
+                        <span
+                          className="h-2 w-2 rounded-full bg-red-500 animate-pulse"
+                          title="Bloqueado"
+                        />
+                      ) : (
+                        <span
+                          className="h-2 w-2 rounded-full bg-emerald-500"
+                          title="Activado"
+                        />
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMenuUserId((prev) =>
+                            prev === user.id ? null : user.id,
+                          );
+                        }}
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={2.5}
+                          stroke="currentColor"
+                          className="w-4 h-4"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5"
+                          />
+                        </svg>
+                      </button>
+
+                      {activeMenuUserId === user.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-10"
+                            onClick={() => setActiveMenuUserId(null)}
+                          />
+                          <div className="absolute right-0 mt-30 w-40 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-xl z-20 animate-fadeIn select-none">
+                            <button
+                              type="button"
                               onClick={() => {
                                 setActiveMenuUserId(null);
-                                handleDisassociateClick(user);
+                                handleOpenDrawer("view", user);
                               }}
-                              className="w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors flex items-center gap-2 cursor-pointer"
+                              className="w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-700 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -1034,137 +969,220 @@ export const UserMaintenance: React.FC = () => {
                                 <path
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
-                                  d="M22 10.5h-6M15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                                  d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
                                 />
                               </svg>
-                              Desasociar del Scope
+                              Ver Detalles
                             </button>
-                          )}
 
-                          <div className="my-1 border-t border-slate-100 dark:border-slate-800/80" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveMenuUserId(null);
+                                handleOpenDrawer("edit", user);
+                              }}
+                              className="w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-700 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                stroke="currentColor"
+                                className="w-3.5 h-3.5 shrink-0"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+                                />
+                              </svg>
+                              Editar
+                            </button>
 
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveMenuUserId(null);
-                              handleToggleStatusClick(user);
-                            }}
-                            className={`w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 cursor-pointer
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveMenuUserId(null);
+                                setRolesUserId(user.id);
+                                setRolesUserEmail(user.email);
+                                setIsRolesOpen(true);
+                              }}
+                              className="w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-700 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                stroke="currentColor"
+                                className="w-3.5 h-3.5 shrink-0"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
+                                />
+                              </svg>
+                              Roles
+                            </button>
+
+                            {isStandardAdmin && ( //
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveMenuUserId(null);
+                                  handleDisassociateClick(user);
+                                }}
+                                className="w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors flex items-center gap-2 cursor-pointer"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={2}
+                                  stroke="currentColor"
+                                  className="w-3.5 h-3.5 shrink-0"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M22 10.5h-6M15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                                  />
+                                </svg>
+                                Desasociar del Scope
+                              </button>
+                            )}
+
+                            <div className="my-1 border-t border-slate-100 dark:border-slate-800/80" />
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveMenuUserId(null);
+                                handleToggleStatusClick(user);
+                              }}
+                              className={`w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 cursor-pointer
                               ${
                                 user.isLockedOut
                                   ? "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
                                   : "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20"
                               }`}
-                          >
-                            {user.isLockedOut ? (
-                              <>
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth={2}
-                                  stroke="currentColor"
-                                  className="w-3.5 h-3.5 shrink-0"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-                                  />
-                                </svg>
-                                Reactivar
-                              </>
-                            ) : (
-                              <>
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth={2}
-                                  stroke="currentColor"
-                                  className="w-3.5 h-3.5 shrink-0"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-                                  />
-                                </svg>
-                                Bloquear
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </>
-                    )}
+                            >
+                              {user.isLockedOut ? (
+                                <>
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={2}
+                                    stroke="currentColor"
+                                    className="w-3.5 h-3.5 shrink-0"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+                                    />
+                                  </svg>
+                                  Reactivar
+                                </>
+                              ) : (
+                                <>
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={2}
+                                    stroke="currentColor"
+                                    className="w-3.5 h-3.5 shrink-0"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+                                    />
+                                  </svg>
+                                  Bloquear
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Body Details block */}
-                <div className="mt-4 space-y-2.5 text-xs text-left">
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-400 dark:text-slate-500 shrink-0">
-                      Email:
-                    </span>
-                    <span className="text-slate-700 dark:text-slate-300 font-mono truncate select-all">
-                      {user.email}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-400 dark:text-slate-500 shrink-0">
-                      Teléfono:
-                    </span>
-                    <span className="text-slate-700 dark:text-slate-300">
-                      {user.phoneNumber || "—"}
-                    </span>
-                  </div>
-                  {user.createdAt && (
+                  {/* Body Details block */}
+                  <div className="mt-4 space-y-2.5 text-xs text-left">
                     <div className="flex items-center gap-2">
                       <span className="text-slate-400 dark:text-slate-500 shrink-0">
-                        Registro:
+                        Email:
                       </span>
-                      <span className="text-slate-600 dark:text-slate-400">
-                        {new Date(user.createdAt).toLocaleDateString("es-ES")}
+                      <span className="text-slate-700 dark:text-slate-300 font-mono truncate select-all">
+                        {user.email}
                       </span>
                     </div>
-                  )}
-                  {(() => {
-                    const { dateStr, relativeStr } = getLastAccessText(
-                      user.lastAccess,
-                    );
-                    return (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <span className="text-slate-400 dark:text-slate-500 shrink-0">
-                            Último Acceso:
-                          </span>
-                          <span className="text-slate-650 dark:text-slate-400 font-mono text-[11px] select-all">
-                            {dateStr}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-slate-400 dark:text-slate-500 shrink-0">
-                            Días sin entrar:
-                          </span>
-                          <span
-                            className={`inline-flex items-center px-1.5 py-0.5 text-[9px] font-bold rounded ${
-                              user.lastAccess
-                                ? "bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-400"
-                                : "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-100/30 dark:border-amber-600/20"
-                            }`}
-                          >
-                            {relativeStr}
-                          </span>
-                        </div>
-                      </>
-                    );
-                  })()}
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400 dark:text-slate-500 shrink-0">
+                        Teléfono:
+                      </span>
+                      <span className="text-slate-700 dark:text-slate-300">
+                        {user.phoneNumber || "—"}
+                      </span>
+                    </div>
+                    {user.createdAt && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-400 dark:text-slate-500 shrink-0">
+                          Registro:
+                        </span>
+                        <span className="text-slate-600 dark:text-slate-400">
+                          {new Date(user.createdAt).toLocaleDateString("es-ES")}
+                        </span>
+                      </div>
+                    )}
+                    {(() => {
+                      const { dateStr, relativeStr } = getLastAccessText(
+                        user.lastAccess,
+                      );
+                      return (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-400 dark:text-slate-500 shrink-0">
+                              Último Acceso:
+                            </span>
+                            <span className="text-slate-650 dark:text-slate-400 font-mono text-[11px] select-all">
+                              {dateStr}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-400 dark:text-slate-500 shrink-0">
+                              Días sin entrar:
+                            </span>
+                            <span
+                              className={`inline-flex items-center px-1.5 py-0.5 text-[9px] font-bold rounded ${
+                                user.lastAccess
+                                  ? "bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-400"
+                                  : "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-100/30 dark:border-amber-600/20"
+                              }`}
+                            >
+                              {relativeStr}
+                            </span>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
       </div>
 
       {/* CLIENT-SIDE / SERVER-SIDE PAGINATION FOOTER CONTROL PANEL */}
