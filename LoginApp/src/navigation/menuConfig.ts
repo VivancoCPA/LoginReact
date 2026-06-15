@@ -80,7 +80,7 @@ export const menuConfig: NavigationItem[] = [
       },
       {
         label: 'Citas',
-        path: '/medical/appointments',
+        path: '/patients/appointments',
         icon: Icons.SubmenuDot()
       }
     ]

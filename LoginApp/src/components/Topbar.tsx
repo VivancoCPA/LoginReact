@@ -41,7 +41,8 @@ export const Topbar: React.FC<TopbarProps> = ({
     if (path.includes('/medical/history')) return 'Historiales Clínicos';
     if (path.includes('/medical/exams')) return 'Exámenes Médicos';
     if (path.includes('/medical/tests')) return 'Pruebas Complementarias';
-    if (path.includes('/medical/appointments')) return 'Agenda de Citas';
+    if (path.includes('/patients/appointments/map')) return 'Geolocalización de Centro';
+    if (path.includes('/patients/appointments')) return 'Agenda de Citas';
     if (path.includes('/admin/medical-centers')) return 'Centros Médicos';
     if (path.includes('/admin/center-types')) return 'Tipos de Centros';
     if (path.includes('/admin/insurances')) return 'Gestión de Aseguradoras';
